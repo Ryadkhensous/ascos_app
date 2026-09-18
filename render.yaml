@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ascos-backend
+    runtime: node
+    region: fra # Frankfurt, Europe (Très faible latence pour la France et l'Europe)
+    plan: starter # ou free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: "*"

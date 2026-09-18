@@ -1,0 +1,139 @@
+// Prisma Schema pour ASCOS Natation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  COACH
+  ATHLETE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Stroke {
+  FREESTYLE
+  BACKSTROKE
+  BREASTSTROKE
+  BUTTERFLY
+  MEDLEY
+}
+
+enum PoolType {
+  POOL_25M
+  POOL_50M
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         Role      @default(COACH)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  coachedGroups TrainingGroup[]
+  athlete       Athlete?
+}
+
+model TrainingGroup {
+  id          String    @id @default(uuid())
+  name        String    // Ex: "Groupe Élite", "Espoirs", "Juniors"
+  description String?
+  coachId     String?
+  coach       User?     @relation(fields: [coachId], references: [id])
+  athletes    Athlete[]
+  sessions    Session[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Athlete {
+  id               String         @id @default(uuid())
+  userId           String?        @unique
+  user             User?          @relation(fields: [userId], references: [id])
+  firstName        String
+  lastName         String
+  dateOfBirth      DateTime
+  gender           Gender
+  category         String         // "Avenirs", "Jeunes", "Juniors", "Séniors", "Masters"
+  licenseNumber    String?        @unique
+  emergencyContact String?
+  photoUrl         String?
+  groupId          String?
+  group            TrainingGroup? @relation(fields: [groupId], references: [id])
+  
+  attendances      Attendance[]
+  times            SwimmingTime[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Session {
+  id          String        @id @default(uuid())
+  groupId     String
+  group       TrainingGroup @relation(fields: [groupId], references: [id])
+  date        DateTime      // Date de la séance
+  startTime   String        // "18:00"
+  endTime     String        // "20:00"
+  poolType    PoolType      @default(POOL_25M)
+  focus       String?       // "Endurance", "Vitesse", "Technique Virages"
+  location    String?       // "Piscine Municipale", "Bassin Olympique"
+  notes       String?
+
+  attendances Attendance[]
+  times       SwimmingTime[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  sessionId String
+  session   Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   Athlete          @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  status    AttendanceStatus @default(PRESENT)
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([sessionId, athleteId])
+}
+
+model SwimmingTime {
+  id             String    @id @default(uuid())
+  athleteId      String
+  athlete        Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  sessionId      String?
+  session        Session?  @relation(fields: [sessionId], references: [id])
+  stroke         Stroke
+  distance       Int       // 50, 100, 200, 400...
+  poolType       PoolType  @default(POOL_25M)
+  timeInMs       Int       // Durée en millisecondes (ex: 24850 pour 24.85s)
+  isPersonalBest Boolean   @default(false)
+  date           DateTime  @default(now())
+  competition    String?   // "Entraînement", "Meeting Régional", "Chpts de France"
+  reactionTimeMs Int?      // Temps de réaction au plot (ex: 680 ms)
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
