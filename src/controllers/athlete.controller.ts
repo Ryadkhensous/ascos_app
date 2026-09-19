@@ -52,15 +52,26 @@ function determineCategory(dob: string): string {
 
 export const getAthletes = (req: Request, res: Response) => {
   try {
-    const { group, category, search, coachGroup, coachId } = req.query;
+    const { group, category, search, coachGroup, coachGroups, coachId } = req.query;
     let list = [...dbStore.athletes];
 
-    // Isolation par groupe d'entraîneur
-    if (coachGroup && coachGroup !== 'Tous' && coachGroup !== 'Tous les groupes') {
-      list = list.filter((a) => a.groupName === String(coachGroup));
+    // Isolation par groupe(s) d'entraîneur
+    const groupsFilter: string[] = [];
+    if (coachGroups) {
+      const parsed = Array.isArray(coachGroups) ? coachGroups : String(coachGroups).split(',');
+      groupsFilter.push(...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes'));
+    } else if (coachGroup && coachGroup !== 'Tous' && coachGroup !== 'Tous les groupes') {
+      const parsed = String(coachGroup).split(',');
+      groupsFilter.push(...parsed.map((g) => g.trim()).filter((g) => g && g !== 'Tous' && g !== 'Tous les groupes'));
+    }
+
+    if (groupsFilter.length > 0) {
+      list = list.filter((a) => groupsFilter.includes(a.groupName));
     } else if (coachId) {
       list = list.filter((a) => a.coachId === String(coachId));
-    } else if (group && group !== 'Tous') {
+    }
+
+    if (group && group !== 'Tous') {
       list = list.filter((a) => a.groupName === group);
     }
 

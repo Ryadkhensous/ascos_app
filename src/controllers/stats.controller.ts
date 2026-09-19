@@ -67,10 +67,15 @@ export const getDashboardStats = (req: Request, res: Response) => {
       }
     }
 
+    const totalCoaches = dbStore.users.filter((u) => u.role === 'COACH').length;
+    const totalGroups = dbStore.groups.length;
+
     return res.json({
       success: true,
       data: {
         totalAthletes,
+        totalCoaches,
+        totalGroups,
         averageAttendanceRate,
         nextSession,
         recentRecords,
@@ -91,7 +96,7 @@ export const getDashboardStats = (req: Request, res: Response) => {
 // Obtenir les statistiques détaillées des heures d'entraînement (Par Jour, Par Mois, Par Année)
 export const getTrainingHoursStats = (req: Request, res: Response) => {
   try {
-    const { athleteId, groupName, coachGroup, year } = req.query;
+    const { athleteId, groupName, coachGroup, coachGroups, year } = req.query;
 
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
@@ -100,13 +105,22 @@ export const getTrainingHoursStats = (req: Request, res: Response) => {
 
     let eligibleSessions = [...dbStore.sessions];
 
-    // Filtrer par groupe si demandé
-    const activeGroup = coachGroup && coachGroup !== 'Tous' && coachGroup !== 'Tous les groupes'
-      ? String(coachGroup)
-      : (groupName && groupName !== 'Tous' ? String(groupName) : null);
+    // Filtrer par groupe(s) si demandé
+    const groupsFilter: string[] = [];
+    if (coachGroups) {
+      const parsed = Array.isArray(coachGroups) ? coachGroups : String(coachGroups).split(',');
+      groupsFilter.push(...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes'));
+    } else if (coachGroup && coachGroup !== 'Tous' && coachGroup !== 'Tous les groupes') {
+      const parsed = String(coachGroup).split(',');
+      groupsFilter.push(...parsed.map((g) => g.trim()).filter((g) => g && g !== 'Tous' && g !== 'Tous les groupes'));
+    }
 
-    if (activeGroup) {
-      eligibleSessions = eligibleSessions.filter((s) => s.groupName === activeGroup);
+    if (groupsFilter.length > 0) {
+      eligibleSessions = eligibleSessions.filter((s) => groupsFilter.includes(s.groupName));
+    }
+
+    if (groupName && groupName !== 'Tous') {
+      eligibleSessions = eligibleSessions.filter((s) => s.groupName === String(groupName));
     }
 
     // Si on demande les statistiques d'un nageur spécifique (heures où il était présent)

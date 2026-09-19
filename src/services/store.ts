@@ -61,6 +61,7 @@ export interface UserData {
   role: 'ADMIN' | 'COACH' | 'ATHLETE';
   phone?: string;
   assignedGroup?: string;
+  assignedGroups?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -88,6 +89,35 @@ export class AscosStore {
       role: 'ADMIN',
       phone: '+33 1 23 45 67 89',
       assignedGroup: 'Tous les groupes',
+      assignedGroups: ['Tous les groupes'],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'user-coach-1',
+      email: 'coach@ascos.fr',
+      // Hash de 'password123'
+      passwordHash: '$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq',
+      firstName: 'Thomas',
+      lastName: 'Dubois',
+      role: 'COACH',
+      phone: '+33 6 12 34 56 78',
+      assignedGroup: 'Groupe Élite, Groupe Performance',
+      assignedGroups: ['Groupe Élite', 'Groupe Performance'],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'user-coach-2',
+      email: 'sophie.coach@ascos.fr',
+      // Hash de 'password123'
+      passwordHash: '$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq',
+      firstName: 'Sophie',
+      lastName: 'Bernard',
+      role: 'COACH',
+      phone: '+33 6 98 76 54 32',
+      assignedGroup: 'Groupe Espoirs, École de Natation',
+      assignedGroups: ['Groupe Espoirs', 'École de Natation'],
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     },

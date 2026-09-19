@@ -7,9 +7,27 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 const JWT_SECRET = process.env.JWT_SECRET || 'ascos_natation_secret_jwt_key_2026_super_secure';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
+function sanitizeUser(user: UserData) {
+  const { passwordHash: _, ...rest } = user;
+  let groups: string[] = [];
+  if (Array.isArray(rest.assignedGroups) && rest.assignedGroups.length > 0) {
+    groups = rest.assignedGroups;
+  } else if (rest.assignedGroup && typeof rest.assignedGroup === 'string') {
+    groups = rest.assignedGroup.split(',').map((g) => g.trim()).filter(Boolean);
+  }
+  if (groups.length === 0) {
+    groups = [rest.role === 'ADMIN' ? 'Tous les groupes' : 'Groupe Élite'];
+  }
+  return {
+    ...rest,
+    assignedGroups: groups,
+    assignedGroup: rest.assignedGroup || groups.join(', '),
+  };
+}
+
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, role, assignedGroup, phone } = req.body;
+    const { email, password, firstName, lastName, role, assignedGroup, assignedGroups, phone } = req.body;
 
     if (!email || !password || !firstName || !lastName) {
       return res.status(400).json({
@@ -29,6 +47,16 @@ export const register = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    let groups: string[] = [];
+    if (Array.isArray(assignedGroups) && assignedGroups.length > 0) {
+      groups = assignedGroups.map((g) => String(g).trim()).filter(Boolean);
+    } else if (assignedGroup && typeof assignedGroup === 'string') {
+      groups = assignedGroup.split(',').map((g) => g.trim()).filter(Boolean);
+    }
+    if (groups.length === 0) {
+      groups = [role === 'ADMIN' ? 'Tous les groupes' : 'Groupe Élite'];
+    }
+
     const newUser: UserData = {
       id: `user-${Date.now()}`,
       email: email.toLowerCase(),
@@ -36,7 +64,8 @@ export const register = async (req: Request, res: Response) => {
       firstName,
       lastName,
       role: role === 'ADMIN' ? 'ADMIN' : 'COACH',
-      assignedGroup: assignedGroup || (role === 'ADMIN' ? 'Tous les groupes' : 'Groupe Élite'),
+      assignedGroups: groups,
+      assignedGroup: groups.join(', '),
       phone: phone || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -56,7 +85,7 @@ export const register = async (req: Request, res: Response) => {
       { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 
-    const { passwordHash: _, ...safeUser } = newUser;
+    const safeUser = sanitizeUser(newUser);
 
     return res.status(201).json({
       success: true,
@@ -108,7 +137,7 @@ export const login = async (req: Request, res: Response) => {
       { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 
-    const { passwordHash: _, ...safeUser } = user;
+    const safeUser = sanitizeUser(user);
 
     return res.json({
       success: true,
@@ -131,19 +160,19 @@ export const getMe = (req: AuthenticatedRequest, res: Response) => {
     return res.status(404).json({ success: false, message: 'Utilisateur introuvable' });
   }
 
-  const { passwordHash: _, ...safeUser } = user;
+  const safeUser = sanitizeUser(user);
   return res.json({ success: true, data: safeUser });
 };
 
 export const getUsers = (_req: Request, res: Response) => {
-  const safeUsers = dbStore.users.map(({ passwordHash, ...rest }) => rest);
+  const safeUsers = dbStore.users.map((u) => sanitizeUser(u));
   return res.json({ success: true, count: safeUsers.length, data: safeUsers });
 };
 
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, email, role, assignedGroup, phone, password } = req.body;
+    const { firstName, lastName, email, role, assignedGroup, assignedGroups, phone, password } = req.body;
 
     const userIndex = dbStore.users.findIndex((u) => u.id === id);
     if (userIndex === -1) {
@@ -166,7 +195,20 @@ export const updateUser = async (req: Request, res: Response) => {
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (role) user.role = role === 'ADMIN' ? 'ADMIN' : 'COACH';
-    if (assignedGroup !== undefined) user.assignedGroup = assignedGroup;
+
+    if (assignedGroups !== undefined || assignedGroup !== undefined) {
+      let groups: string[] = [];
+      if (Array.isArray(assignedGroups) && assignedGroups.length > 0) {
+        groups = assignedGroups.map((g) => String(g).trim()).filter(Boolean);
+      } else if (assignedGroup && typeof assignedGroup === 'string') {
+        groups = assignedGroup.split(',').map((g) => g.trim()).filter(Boolean);
+      }
+      if (groups.length > 0) {
+        user.assignedGroups = groups;
+        user.assignedGroup = groups.join(', ');
+      }
+    }
+
     if (phone !== undefined) user.phone = phone;
 
     // Si nouveau mot de passe fourni
@@ -177,7 +219,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
     user.updatedAt = new Date().toISOString();
 
-    const { passwordHash: _, ...safeUser } = user;
+    const safeUser = sanitizeUser(user);
     return res.json({
       success: true,
       message: 'Compte entraîneur mis à jour avec succès',

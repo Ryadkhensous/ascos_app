@@ -3,8 +3,21 @@ import { dbStore, SessionData } from '../services/store';
 
 export const getSessions = (req: Request, res: Response) => {
   try {
-    const { groupName } = req.query;
+    const { groupName, groups, coachGroups } = req.query;
     let list = [...dbStore.sessions];
+
+    const groupsFilter: string[] = [];
+    if (coachGroups) {
+      const parsed = Array.isArray(coachGroups) ? coachGroups : String(coachGroups).split(',');
+      groupsFilter.push(...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes'));
+    } else if (groups) {
+      const parsed = Array.isArray(groups) ? groups : String(groups).split(',');
+      groupsFilter.push(...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes'));
+    }
+
+    if (groupsFilter.length > 0) {
+      list = list.filter((s) => groupsFilter.includes(s.groupName));
+    }
 
     if (groupName && groupName !== 'Tous') {
       list = list.filter((s) => s.groupName === groupName);
