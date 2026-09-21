@@ -234,7 +234,7 @@ const renderApiDocsHtml = () => `<!DOCTYPE html>
         <div class="endpoint-left">
           <span class="method method-POST">POST</span>
           <span class="path">/api/auth/login</span>
-          <span class="desc">Connexion entraîneur (défaut : coach@ascos.fr / password123)</span>
+          <span class="desc">Connexion entraîneur / administrateur</span>
         </div>
       </div>
       <div class="endpoint">
