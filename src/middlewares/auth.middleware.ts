@@ -6,7 +6,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'ascos_natation_secret_jwt_key_2026
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
-    email: string;
+    username?: string;
+    email?: string;
     role: string;
     firstName: string;
     lastName: string;

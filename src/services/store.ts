@@ -54,7 +54,8 @@ export interface SwimmingTimeData {
 
 export interface UserData {
   id: string;
-  email: string;
+  username?: string;
+  email?: string;
   passwordHash: string;
   firstName: string;
   lastName: string;
@@ -81,6 +82,7 @@ export class AscosStore {
   public users: UserData[] = [
     {
       id: 'user-admin-1',
+      username: 'admin',
       email: 'admin@ascos.fr',
       // Hash de 'password123'
       passwordHash: '$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq',

@@ -18,8 +18,12 @@ function sanitizeUser(user: UserData) {
   if (groups.length === 0) {
     groups = [rest.role === 'ADMIN' ? 'Tous les groupes' : 'Groupe Élite'];
   }
+  const username = user.username || (user.email ? user.email.split('@')[0] : '');
+  const email = user.email || (username ? `${username}@ascos.fr` : '');
   return {
     ...rest,
+    username,
+    email,
     assignedGroups: groups,
     assignedGroup: rest.assignedGroup || groups.join(', '),
   };
@@ -27,21 +31,40 @@ function sanitizeUser(user: UserData) {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, role, assignedGroup, assignedGroups, phone } = req.body;
+    const { username, email, password, firstName, lastName, role, assignedGroup, assignedGroups, phone } = req.body;
 
-    if (!email || !password || !firstName || !lastName) {
+    const cleanUsername = username ? String(username).trim().toLowerCase() : '';
+    const cleanEmail = email ? String(email).trim().toLowerCase() : (cleanUsername ? `${cleanUsername}@ascos.fr` : '');
+
+    if ((!cleanUsername && !cleanEmail) || !password || !firstName || !lastName) {
       return res.status(400).json({
         success: false,
-        message: 'Tous les champs obligatoires sont requis (email, mot de passe, prénom, nom)',
+        message: "Nom d'utilisateur (ou email), mot de passe, prénom et nom sont requis",
       });
     }
 
-    const existingUser = dbStore.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'Cet email est déjà utilisé par un autre compte',
-      });
+    if (cleanUsername) {
+      const existingUserByUsername = dbStore.users.find(
+        (u) => u.username && u.username.toLowerCase() === cleanUsername
+      );
+      if (existingUserByUsername) {
+        return res.status(409).json({
+          success: false,
+          message: "Ce nom d'utilisateur est déjà utilisé par un autre compte",
+        });
+      }
+    }
+
+    if (cleanEmail) {
+      const existingUserByEmail = dbStore.users.find(
+        (u) => u.email && u.email.toLowerCase() === cleanEmail
+      );
+      if (existingUserByEmail) {
+        return res.status(409).json({
+          success: false,
+          message: 'Cet email est déjà utilisé par un autre compte',
+        });
+      }
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -59,7 +82,8 @@ export const register = async (req: Request, res: Response) => {
 
     const newUser: UserData = {
       id: `user-${Date.now()}`,
-      email: email.toLowerCase(),
+      username: cleanUsername || cleanEmail.split('@')[0],
+      email: cleanEmail,
       passwordHash,
       firstName,
       lastName,
@@ -76,6 +100,7 @@ export const register = async (req: Request, res: Response) => {
     const token = jwt.sign(
       {
         id: newUser.id,
+        username: newUser.username,
         email: newUser.email,
         role: newUser.role,
         firstName: newUser.firstName,
@@ -100,20 +125,26 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, identifier, password } = req.body;
+    const loginId = String(username || identifier || email || '').trim().toLowerCase();
 
-    if (!email || !password) {
+    if (!loginId || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email et mot de passe requis',
+        message: "Nom d'utilisateur (ou email) et mot de passe requis",
       });
     }
 
-    const user = dbStore.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const user = dbStore.users.find((u) => {
+      const uName = (u.username || '').toLowerCase();
+      const uMail = (u.email || '').toLowerCase();
+      return uName === loginId || uMail === loginId;
+    });
+
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Identifiants invalides (email ou mot de passe incorrect)',
+        message: "Identifiants invalides (nom d'utilisateur ou mot de passe incorrect)",
       });
     }
 
@@ -121,13 +152,14 @@ export const login = async (req: Request, res: Response) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Identifiants invalides (email ou mot de passe incorrect)',
+        message: "Identifiants invalides (nom d'utilisateur ou mot de passe incorrect)",
       });
     }
 
     const token = jwt.sign(
       {
         id: user.id,
+        username: user.username,
         email: user.email,
         role: user.role,
         firstName: user.firstName,
@@ -172,7 +204,7 @@ export const getUsers = (_req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, email, role, assignedGroup, assignedGroups, phone, password } = req.body;
+    const { firstName, lastName, email, username, role, assignedGroup, assignedGroups, phone, password } = req.body;
 
     const userIndex = dbStore.users.findIndex((u) => u.id === id);
     if (userIndex === -1) {
@@ -181,15 +213,28 @@ export const updateUser = async (req: Request, res: Response) => {
 
     const user = dbStore.users[userIndex];
 
+    // Vérifier unicité username si modifié
+    if (username && (!user.username || username.trim().toLowerCase() !== user.username.toLowerCase())) {
+      const cleanUsername = username.trim().toLowerCase();
+      const usernameTaken = dbStore.users.some(
+        (u) => u.id !== id && u.username && u.username.toLowerCase() === cleanUsername
+      );
+      if (usernameTaken) {
+        return res.status(409).json({ success: false, message: "Ce nom d'utilisateur est déjà attribué à un autre compte" });
+      }
+      user.username = cleanUsername;
+    }
+
     // Vérifier unicité email si modifié
-    if (email && email.toLowerCase() !== user.email.toLowerCase()) {
+    if (email && (!user.email || email.trim().toLowerCase() !== user.email.toLowerCase())) {
+      const cleanEmail = email.trim().toLowerCase();
       const emailTaken = dbStore.users.some(
-        (u) => u.id !== id && u.email.toLowerCase() === email.toLowerCase()
+        (u) => u.id !== id && u.email && u.email.toLowerCase() === cleanEmail
       );
       if (emailTaken) {
         return res.status(409).json({ success: false, message: 'Cet email est déjà attribué à un autre compte' });
       }
-      user.email = email.toLowerCase();
+      user.email = cleanEmail;
     }
 
     if (firstName) user.firstName = firstName;
