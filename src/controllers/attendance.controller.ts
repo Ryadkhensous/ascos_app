@@ -281,7 +281,12 @@ function recalculateAthleteAttendance(athleteId: string) {
   if (!athlete) return;
 
   const logs = dbStore.attendances.filter((a) => a.athleteId === athleteId);
-  if (logs.length === 0) return;
+  if (logs.length === 0) {
+    athlete.totalSessions = 0;
+    athlete.attendedSessions = 0;
+    athlete.attendanceRate = 100.0;
+    return;
+  }
 
   const presentOrLate = logs.filter((a) => a.status === 'PRESENT' || a.status === 'LATE').length;
   athlete.totalSessions = logs.length;
