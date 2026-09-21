@@ -96,6 +96,7 @@ export const register = async (req: Request, res: Response) => {
     };
 
     dbStore.users.push(newUser);
+    dbStore.saveToFile();
 
     const token = jwt.sign(
       {
@@ -263,6 +264,7 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 
     user.updatedAt = new Date().toISOString();
+    dbStore.saveToFile();
 
     const safeUser = sanitizeUser(user);
     return res.json({
@@ -296,6 +298,7 @@ export const deleteUser = (req: Request, res: Response) => {
     }
 
     dbStore.users = dbStore.users.filter((u) => u.id !== id);
+    dbStore.saveToFile();
 
     return res.json({
       success: true,

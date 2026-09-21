@@ -37,6 +37,7 @@ export const markAttendance = (req: Request, res: Response) => {
 
     // Recalculer le taux de présence de l'athlète
     recalculateAthleteAttendance(athleteId);
+    dbStore.saveToFile();
 
     return res.json({ success: true, message: 'Présence mise à jour avec succès' });
   } catch (error: any) {
@@ -77,6 +78,7 @@ export const saveBatchAttendance = (req: Request, res: Response) => {
       recalculateAthleteAttendance(athleteId);
     }
 
+    dbStore.saveToFile();
     return res.json({ success: true, message: 'Feuille d\'appel enregistrée avec succès' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -269,6 +271,7 @@ export const deleteAttendance = (req: Request, res: Response) => {
     const athleteId = record.athleteId;
     dbStore.attendances = dbStore.attendances.filter((a) => a.id !== id);
     recalculateAthleteAttendance(athleteId);
+    dbStore.saveToFile();
 
     return res.json({ success: true, message: 'Présence supprimée avec succès' });
   } catch (error: any) {

@@ -151,6 +151,7 @@ export const createAthlete = (req: Request, res: Response) => {
     };
 
     dbStore.athletes.unshift(newAthlete);
+    dbStore.saveToFile();
 
     return res.status(201).json({ success: true, data: newAthlete });
   } catch (error: any) {
@@ -189,6 +190,7 @@ export const createAthletesBatch = (req: Request, res: Response) => {
       dbStore.athletes.push(ath);
       added.push(ath);
     }
+    dbStore.saveToFile();
 
     return res.status(201).json({
       success: true,
@@ -315,6 +317,7 @@ export const importExcelAthletes = (req: Request, res: Response) => {
       dbStore.athletes.push(newAthlete);
       added.push(newAthlete);
     }
+    dbStore.saveToFile();
 
     return res.status(200).json({
       success: true,
@@ -394,6 +397,7 @@ export const updateAthlete = (req: Request, res: Response) => {
       ...dbStore.athletes[index],
       ...req.body,
     };
+    dbStore.saveToFile();
 
     return res.json({ success: true, data: dbStore.athletes[index] });
   } catch (error: any) {
@@ -411,6 +415,11 @@ export const deleteAthlete = (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Athlète non trouvé' });
     }
 
+    // Nettoyer en cascade les présences et les temps associés
+    dbStore.attendances = dbStore.attendances.filter((att) => att.athleteId !== id);
+    dbStore.swimmingTimes = dbStore.swimmingTimes.filter((t) => t.athleteId !== id);
+    dbStore.saveToFile();
+
     return res.json({ success: true, message: 'Athlète supprimé avec succès' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -421,6 +430,9 @@ export const clearAllAthletes = (req: Request, res: Response) => {
   try {
     const count = dbStore.athletes.length;
     dbStore.athletes = [];
+    dbStore.attendances = [];
+    dbStore.swimmingTimes = [];
+    dbStore.saveToFile();
     return res.json({ success: true, count, message: `${count} athlètes supprimés` });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });

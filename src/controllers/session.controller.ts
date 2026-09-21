@@ -93,6 +93,7 @@ export const createSession = (req: Request, res: Response) => {
     };
 
     dbStore.sessions.unshift(newSession);
+    dbStore.saveToFile();
 
     return res.status(201).json({ success: true, data: newSession });
   } catch (error: any) {
@@ -113,6 +114,7 @@ export const updateSession = (req: Request, res: Response) => {
       ...dbStore.sessions[index],
       ...req.body,
     };
+    dbStore.saveToFile();
 
     return res.json({ success: true, data: dbStore.sessions[index] });
   } catch (error: any) {
@@ -132,6 +134,7 @@ export const deleteSession = (req: Request, res: Response) => {
 
     // Supprimer également les présences associées
     dbStore.attendances = dbStore.attendances.filter((a) => a.sessionId !== id);
+    dbStore.saveToFile();
 
     return res.json({ success: true, message: 'Séance et feuilles de présence associées supprimées' });
   } catch (error: any) {

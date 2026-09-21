@@ -85,6 +85,7 @@ export const createGroup = (req: Request, res: Response) => {
     };
 
     dbStore.groups.push(newGroup);
+    dbStore.saveToFile();
 
     return res.status(201).json({ success: true, data: newGroup });
   } catch (error: any) {
@@ -128,6 +129,7 @@ export const updateGroup = (req: Request, res: Response) => {
     }
 
     dbStore.groups[index].updatedAt = new Date().toISOString();
+    dbStore.saveToFile();
 
     return res.json({ success: true, data: dbStore.groups[index] });
   } catch (error: any) {
@@ -146,6 +148,7 @@ export const deleteGroup = (req: Request, res: Response) => {
     }
 
     dbStore.groups = dbStore.groups.filter((g) => g.id !== id);
+    dbStore.saveToFile();
 
     return res.json({
       success: true,

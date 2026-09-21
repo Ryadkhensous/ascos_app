@@ -1,0 +1,54 @@
+{
+  "users": [
+    {
+      "id": "user-admin-1",
+      "username": "admin",
+      "email": "admin@ascos.fr",
+      "passwordHash": "$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq",
+      "firstName": "Administrateur",
+      "lastName": "ASCOS",
+      "role": "ADMIN",
+      "phone": "+33 1 23 45 67 89",
+      "assignedGroup": "Tous les groupes",
+      "assignedGroups": [
+        "Tous les groupes"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "groups": [
+    {
+      "id": "grp-elite",
+      "name": "Groupe Élite",
+      "description": "Nageurs de niveau national et international (cadences élevées, travail au centième)",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "grp-perf",
+      "name": "Groupe Performance",
+      "description": "Nageurs régionaux et interrégionaux visant les qualifications nationales",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "grp-espoirs",
+      "name": "Groupe Espoirs",
+      "description": "Jeunes talents en perfectionnement technique des 4 nages et départs/virages",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "grp-ecole",
+      "name": "École de Natation",
+      "description": "Apprentissage et validation du Sauv'nage et du Pass'sports de l'eau",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "athletes": [],
+  "sessions": [],
+  "attendances": [],
+  "swimmingTimes": []
+}

@@ -35,6 +35,7 @@ export const recordTime = (req: Request, res: Response) => {
     // Vérifier et ajuster si c'est un Record Personnel (PB)
     const isPB = dbStore.checkAndSetPersonalBest(newTime);
     dbStore.swimmingTimes.unshift(newTime);
+    dbStore.saveToFile();
 
     return res.status(201).json({
       success: true,
@@ -150,6 +151,7 @@ export const updateTime = (req: Request, res: Response) => {
     if (req.body.timeInMs) {
       dbStore.checkAndSetPersonalBest(dbStore.swimmingTimes[index]);
     }
+    dbStore.saveToFile();
 
     return res.json({ success: true, data: dbStore.swimmingTimes[index] });
   } catch (error: any) {
@@ -187,6 +189,7 @@ export const deleteTime = (req: Request, res: Response) => {
         best.isPersonalBest = true;
       }
     }
+    dbStore.saveToFile();
 
     return res.json({ success: true, message: 'Chronomètre supprimé avec succès' });
   } catch (error: any) {
