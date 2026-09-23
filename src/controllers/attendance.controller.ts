@@ -8,15 +8,23 @@ const normalizeStr = (str?: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
 
+const getSessionGroups = (sessionGroupName?: string): string[] => {
+  return String(sessionGroupName || '')
+    .split(',')
+    .map((g) => normalizeStr(g.trim()))
+    .filter(Boolean);
+};
+
 const isAllGroupsMatch = (groupName?: string) => {
-  const norm = normalizeStr(groupName);
-  return (
-    !norm ||
-    norm === 'tous' ||
-    norm === 'tous les groupes' ||
-    norm === 'club complet' ||
-    norm === 'tous mes groupes' ||
-    norm === 'general'
+  const groups = getSessionGroups(groupName);
+  if (groups.length === 0) return true;
+  return groups.some(
+    (norm) =>
+      norm === 'tous' ||
+      norm === 'tous les groupes' ||
+      norm === 'club complet' ||
+      norm === 'tous mes groupes' ||
+      norm === 'general'
   );
 };
 
@@ -24,8 +32,8 @@ const getAthletesForSession = (sessionGroupName?: string) => {
   if (isAllGroupsMatch(sessionGroupName)) {
     return dbStore.athletes;
   }
-  const norm = normalizeStr(sessionGroupName);
-  return dbStore.athletes.filter((a) => normalizeStr(a.groupName) === norm);
+  const groups = getSessionGroups(sessionGroupName);
+  return dbStore.athletes.filter((a) => groups.includes(normalizeStr(a.groupName)));
 };
 
 // Enregistrer ou mettre à jour la présence d'un athlète à une séance
@@ -118,11 +126,12 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
     const { groupName, startDate, endDate } = req.query;
 
     let sessions = [...dbStore.sessions];
-    if (groupName && groupName !== 'Tous') {
+    if (groupName && groupName !== 'Tous' && groupName !== 'Tous les groupes') {
       const normQuery = normalizeStr(String(groupName));
       sessions = sessions.filter((s) => {
         if (isAllGroupsMatch(s.groupName)) return true;
-        return normalizeStr(s.groupName) === normQuery;
+        const groups = getSessionGroups(s.groupName);
+        return groups.includes(normQuery);
       });
     }
     if (startDate) {

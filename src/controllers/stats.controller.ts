@@ -116,11 +116,26 @@ export const getTrainingHoursStats = (req: Request, res: Response) => {
     }
 
     if (groupsFilter.length > 0) {
-      eligibleSessions = eligibleSessions.filter((s) => groupsFilter.includes(s.groupName));
+      eligibleSessions = eligibleSessions.filter((s) => {
+        const sGroups = String(s.groupName || '').split(',').map((g) => g.trim().toLowerCase());
+        return (
+          sGroups.includes('tous') ||
+          sGroups.includes('tous les groupes') ||
+          groupsFilter.some((gf) => sGroups.includes(gf.toLowerCase()))
+        );
+      });
     }
 
-    if (groupName && groupName !== 'Tous') {
-      eligibleSessions = eligibleSessions.filter((s) => s.groupName === String(groupName));
+    if (groupName && groupName !== 'Tous' && groupName !== 'Tous les groupes') {
+      const target = String(groupName).toLowerCase().trim();
+      eligibleSessions = eligibleSessions.filter((s) => {
+        const sGroups = String(s.groupName || '').split(',').map((g) => g.trim().toLowerCase());
+        return (
+          sGroups.includes('tous') ||
+          sGroups.includes('tous les groupes') ||
+          sGroups.includes(target)
+        );
+      });
     }
 
     // Si on demande les statistiques d'un nageur spécifique (heures où il était présent)

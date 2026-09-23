@@ -108,19 +108,32 @@ export const getSessions = (req: Request, res: Response) => {
     }
 
     if (groupsFilter.length > 0) {
-      list = list.filter((s) =>
-        s.groupName === 'Tous les groupes' ||
-        s.groupName === 'Tous' ||
-        groupsFilter.some((gf) => normalizeStr(gf) === normalizeStr(s.groupName))
-      );
+      list = list.filter((s) => {
+        const sGroups = String(s.groupName || '')
+          .split(',')
+          .map((g) => normalizeStr(g.trim()))
+          .filter(Boolean);
+        return (
+          sGroups.length === 0 ||
+          sGroups.some((g) => g === 'tous' || g === 'tous les groupes') ||
+          groupsFilter.some((gf) => sGroups.includes(normalizeStr(gf)))
+        );
+      });
     }
 
     if (groupName && groupName !== 'Tous' && groupName !== 'Tous les groupes' && groupName !== 'Tous mes groupes') {
-      list = list.filter((s) =>
-        s.groupName === 'Tous les groupes' ||
-        s.groupName === 'Tous' ||
-        normalizeStr(s.groupName) === normalizeStr(String(groupName))
-      );
+      const normTarget = normalizeStr(String(groupName));
+      list = list.filter((s) => {
+        const sGroups = String(s.groupName || '')
+          .split(',')
+          .map((g) => normalizeStr(g.trim()))
+          .filter(Boolean);
+        return (
+          sGroups.length === 0 ||
+          sGroups.some((g) => g === 'tous' || g === 'tous les groupes') ||
+          sGroups.includes(normTarget)
+        );
+      });
     }
 
     // Trier par date la plus récente, puis par heure de début
@@ -145,18 +158,26 @@ export const getSessionById = (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Séance introuvable' });
     }
 
-    const normSessionGroup = normalizeStr(session.groupName);
-    const isAllGroups = !session.groupName ||
-      normSessionGroup === 'tous' ||
-      normSessionGroup === 'tous les groupes' ||
-      normSessionGroup === 'club complet' ||
-      normSessionGroup === 'tous mes groupes' ||
-      normSessionGroup === 'general';
+    const sessionGroups = String(session.groupName || '')
+      .split(',')
+      .map((g) => normalizeStr(g.trim()))
+      .filter(Boolean);
 
-    // Récupérer les athlètes faisant partie du groupe de la séance ou tous si "Tous les groupes"
+    const isAllGroups =
+      sessionGroups.length === 0 ||
+      sessionGroups.some(
+        (g) =>
+          g === 'tous' ||
+          g === 'tous les groupes' ||
+          g === 'club complet' ||
+          g === 'tous mes groupes' ||
+          g === 'general'
+      );
+
+    // Récupérer les athlètes faisant partie d'un des groupes de la séance ou tous si "Tous les groupes"
     const groupAthletes = isAllGroups
       ? dbStore.athletes
-      : dbStore.athletes.filter((a) => normalizeStr(a.groupName) === normSessionGroup);
+      : dbStore.athletes.filter((a) => sessionGroups.includes(normalizeStr(a.groupName)));
 
     // Récupérer les présences déjà enregistrées pour cette séance
     const attendances = dbStore.attendances.filter((att) => att.sessionId === id);

@@ -5,7 +5,10 @@ export const getGroups = (_req: Request, res: Response) => {
   try {
     const groupsWithStats = dbStore.groups.map((group) => {
       const athletes = dbStore.athletes.filter((a) => a.groupName === group.name);
-      const sessions = dbStore.sessions.filter((s) => s.groupName === group.name);
+      const sessions = dbStore.sessions.filter((s) => {
+        const sGroups = String(s.groupName || '').split(',').map((g) => g.trim().toLowerCase());
+        return sGroups.includes(group.name.toLowerCase()) || sGroups.includes('tous les groupes') || sGroups.includes('tous');
+      });
       const avgAttendance = athletes.length > 0
         ? Math.round((athletes.reduce((acc, a) => acc + a.attendanceRate, 0) / athletes.length) * 10) / 10
         : 100.0;
@@ -38,7 +41,10 @@ export const getGroupById = (req: Request, res: Response) => {
     }
 
     const athletes = dbStore.athletes.filter((a) => a.groupName === group.name);
-    const sessions = dbStore.sessions.filter((s) => s.groupName === group.name);
+    const sessions = dbStore.sessions.filter((s) => {
+      const sGroups = String(s.groupName || '').split(',').map((g) => g.trim().toLowerCase());
+      return sGroups.includes(group.name.toLowerCase()) || sGroups.includes('tous les groupes') || sGroups.includes('tous');
+    });
 
     return res.json({
       success: true,
