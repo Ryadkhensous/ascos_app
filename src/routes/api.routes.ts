@@ -53,6 +53,11 @@ import {
   deleteUser,
 } from '../controllers/auth.controller';
 import { getDashboardStats, getTrainingHoursStats } from '../controllers/stats.controller';
+import {
+  getDatabaseDump,
+  downloadDatabaseBackup,
+  renderDatabaseViewer,
+} from '../controllers/database.controller';
 import { verifyToken } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -63,6 +68,13 @@ const router = Router();
 router.get('/health', (_req, res) => {
   res.json({ success: true, status: 'ok', server: 'ASCOS Backend', timestamp: new Date().toISOString() });
 });
+
+// ==========================================
+// 🗄️ Base de Données & Sauvegarde (/api/database)
+// ==========================================
+router.get('/database', renderDatabaseViewer);
+router.get('/database/dump', getDatabaseDump);
+router.get('/database/backup.json', downloadDatabaseBackup);
 
 // ==========================================
 // 🔐 Authentification & Utilisateurs (/api/auth)
