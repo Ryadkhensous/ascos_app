@@ -1,6 +1,33 @@
 import { Request, Response } from 'express';
 import { dbStore, AttendanceData } from '../services/store';
 
+const normalizeStr = (str?: string) =>
+  (str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+const isAllGroupsMatch = (groupName?: string) => {
+  const norm = normalizeStr(groupName);
+  return (
+    !norm ||
+    norm === 'tous' ||
+    norm === 'tous les groupes' ||
+    norm === 'club complet' ||
+    norm === 'tous mes groupes' ||
+    norm === 'general'
+  );
+};
+
+const getAthletesForSession = (sessionGroupName?: string) => {
+  if (isAllGroupsMatch(sessionGroupName)) {
+    return dbStore.athletes;
+  }
+  const norm = normalizeStr(sessionGroupName);
+  return dbStore.athletes.filter((a) => normalizeStr(a.groupName) === norm);
+};
+
 // Enregistrer ou mettre à jour la présence d'un athlète à une séance
 export const markAttendance = (req: Request, res: Response) => {
   try {
@@ -92,7 +119,11 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
 
     let sessions = [...dbStore.sessions];
     if (groupName && groupName !== 'Tous') {
-      sessions = sessions.filter((s) => s.groupName === groupName);
+      const normQuery = normalizeStr(String(groupName));
+      sessions = sessions.filter((s) => {
+        if (isAllGroupsMatch(s.groupName)) return true;
+        return normalizeStr(s.groupName) === normQuery;
+      });
     }
     if (startDate) {
       sessions = sessions.filter((s) => s.date >= String(startDate));
@@ -105,7 +136,7 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
 
     const history = sessions.map((sess) => {
       const records = dbStore.attendances.filter((att) => att.sessionId === sess.id);
-      const groupAthletes = dbStore.athletes.filter((a) => a.groupName === sess.groupName);
+      const groupAthletes = getAthletesForSession(sess.groupName);
 
       const list = groupAthletes.map((ath) => {
         const rec = records.find((r) => r.athleteId === ath.id);
@@ -160,7 +191,7 @@ export const exportAttendanceCsv = (req: Request, res: Response) => {
     }
 
     for (const sess of sessionsToExport) {
-      const groupAthletes = dbStore.athletes.filter((a) => a.groupName === sess.groupName);
+      const groupAthletes = getAthletesForSession(sess.groupName);
       const records = dbStore.attendances.filter((att) => att.sessionId === sess.id);
 
       for (const ath of groupAthletes) {
@@ -231,7 +262,7 @@ export const getSessionAttendance = (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Séance introuvable' });
     }
 
-    const groupAthletes = dbStore.athletes.filter((a) => a.groupName === session.groupName);
+    const groupAthletes = getAthletesForSession(session.groupName);
     const existingRecords = dbStore.attendances.filter((a) => a.sessionId === sessionId);
 
     const sheet = groupAthletes.map((ath) => {
