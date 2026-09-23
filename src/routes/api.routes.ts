@@ -57,6 +57,7 @@ import {
   getDatabaseDump,
   downloadDatabaseBackup,
   renderDatabaseViewer,
+  resetDatabase,
 } from '../controllers/database.controller';
 import { verifyToken } from '../middlewares/auth.middleware';
 
@@ -75,6 +76,7 @@ router.get('/health', (_req, res) => {
 router.get('/database', renderDatabaseViewer);
 router.get('/database/dump', getDatabaseDump);
 router.get('/database/backup.json', downloadDatabaseBackup);
+router.post('/database/reset', resetDatabase);
 
 // ==========================================
 // 🔐 Authentification & Utilisateurs (/api/auth)

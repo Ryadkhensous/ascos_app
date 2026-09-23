@@ -65,6 +65,87 @@ export const downloadDatabaseBackup = (_req: Request, res: Response) => {
   }
 };
 
+// Réinitialiser la base de données à zéro en préservant impérativement les comptes ADMIN
+export const resetDatabase = (_req: Request, res: Response) => {
+  try {
+    // 1. Filtrer pour ne conserver QUE les comptes administrateurs
+    let admins = dbStore.users.filter((u) => u.role === 'ADMIN');
+
+    // S'il n'y a aucun admin trouvé par précaution, recréer l'admin par défaut
+    if (admins.length === 0) {
+      admins = [
+        {
+          id: 'user-admin-1',
+          username: 'admin',
+          email: 'admin@ascos.fr',
+          passwordHash: '$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq',
+          firstName: 'Administrateur',
+          lastName: 'ASCOS',
+          role: 'ADMIN',
+          phone: '+33 1 23 45 67 89',
+          assignedGroup: 'Tous les groupes',
+          assignedGroups: ['Tous les groupes'],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+    }
+
+    // 2. Vider toutes les collections de données opérationnelles
+    dbStore.athletes = [];
+    dbStore.sessions = [];
+    dbStore.attendances = [];
+    dbStore.swimmingTimes = [];
+    dbStore.users = admins;
+
+    // 3. Réinitialiser les 4 groupes officiels de base
+    dbStore.groups = [
+      {
+        id: 'grp-elite',
+        name: 'Groupe Élite',
+        description: 'Nageurs de niveau national et international',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'grp-perf',
+        name: 'Groupe Performance',
+        description: 'Nageurs régionaux et interrégionaux',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'grp-espoirs',
+        name: 'Groupe Espoirs',
+        description: 'Jeunes talents en perfectionnement technique',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'grp-ecole',
+        name: 'École de Natation',
+        description: 'Apprentissage et validation Sauv\'nage',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
+    // 4. Sauvegarder sur disque
+    dbStore.saveToFile();
+
+    console.log(`🧹 Base de données réinitialisée à zéro. ${admins.length} compte(s) administrateur conservé(s).`);
+
+    return res.json({
+      success: true,
+      message: 'Base de données réinitialisée à zéro avec succès. Le compte Administrateur a été conservé.',
+      adminCount: admins.length,
+      admins: admins.map((a) => ({ username: a.username, email: a.email, firstName: a.firstName, lastName: a.lastName })),
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Interface Web visuelle pour consulter la base de données directement dans le navigateur
 export const renderDatabaseViewer = (_req: Request, res: Response) => {
   const safeUsers = dbStore.users.map((u) => {
@@ -102,6 +183,8 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     .btn-primary:hover { opacity: 0.9; }
     .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-secondary:hover { border-color: var(--cyan); }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .btn-danger:hover { background: #EF4444; color: #FFFFFF; }
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
     .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; }
     .stat-val { font-size: 2rem; font-weight: 800; color: var(--cyan); margin-bottom: 0.2rem; }
@@ -133,7 +216,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       <div class="actions">
         <a href="/api/database/backup.json" class="btn btn-primary" download>📥 Télécharger la Sauvegarde (.json)</a>
         <a href="/api/database/dump" class="btn btn-secondary" target="_blank">🔍 Voir JSON Brut</a>
-        <a href="/api/docs" class="btn btn-secondary">📑 API Docs</a>
+        <button onclick="handleResetDb()" class="btn btn-danger">⚠️ Réinitialiser la BD à 0</button>
       </div>
     </header>
 
@@ -347,6 +430,33 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       evt.currentTarget.classList.add('active');
+    }
+
+    async function handleResetDb() {
+      const confirmFirst = confirm("⚠️ ATTENTION : Vous êtes sur le point de réinitialiser la base de données à zéro.\\n\\n• Tous les nageurs, séances, présences et chronomètres seront supprimés.\\n• LE COMPTE ADMINISTRATEUR SERA TOUJOURS CONSERVÉ.\\n\\nSouhaitez-vous continuer ?");
+      if (!confirmFirst) return;
+
+      const confirmSecond = prompt("Pour confirmer cette opération irréversible, tapez le mot 'RESET' en majuscules ci-dessous :");
+      if (confirmSecond !== 'RESET') {
+        alert("Opération annulée. Le mot 'RESET' n'a pas été saisi.");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/database/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert("✅ " + data.message);
+          window.location.reload();
+        } else {
+          alert("❌ Erreur : " + (data.message || 'Impossible de réinitialiser la base'));
+        }
+      } catch (err) {
+        alert("❌ Erreur de connexion avec le serveur : " + err.message);
+      }
     }
   </script>
 </body>
