@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { Pool } from 'pg';
 
 function resolveDataPaths(): { dataDir: string; dataFile: string } {
   const candidateDirs = [
@@ -156,11 +157,87 @@ export class AscosStore {
   public attendances: AttendanceData[] = [];
   public swimmingTimes: SwimmingTimeData[] = [];
 
+  public pgPool: Pool | null = null;
+  public isPgConnected: boolean = false;
+  public pgStatusText: string = 'Mode Stockage Fichier Local (JSON)';
+
   constructor() {
     this.loadFromFile();
+    this.initPostgres();
+  }
+
+  public async initPostgres(): Promise<void> {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl || !dbUrl.startsWith('postgres')) {
+      this.isPgConnected = false;
+      this.pgStatusText = 'Mode Stockage Fichier Local (JSON)';
+      return;
+    }
+
+    try {
+      this.pgPool = new Pool({
+        connectionString: dbUrl,
+        ssl: dbUrl.includes('localhost') ? false : { rejectUnauthorized: false },
+        connectionTimeoutMillis: 5000,
+      });
+
+      const client = await this.pgPool.connect();
+      try {
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS ascos_cloud_store (
+            id VARCHAR(50) PRIMARY KEY,
+            data JSONB NOT NULL,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        const res = await client.query(`SELECT data FROM ascos_cloud_store WHERE id = 'main' LIMIT 1;`);
+        if (res.rows.length > 0 && res.rows[0].data) {
+          const cloudData = res.rows[0].data;
+          if (Array.isArray(cloudData.users) && cloudData.users.length > 0) this.users = cloudData.users;
+          if (Array.isArray(cloudData.groups) && cloudData.groups.length > 0) this.groups = cloudData.groups;
+          if (Array.isArray(cloudData.athletes)) this.athletes = cloudData.athletes;
+          if (Array.isArray(cloudData.sessions)) this.sessions = cloudData.sessions;
+          if (Array.isArray(cloudData.attendances)) this.attendances = cloudData.attendances;
+          if (Array.isArray(cloudData.swimmingTimes)) this.swimmingTimes = cloudData.swimmingTimes;
+
+          console.log(`🌐 [PostgreSQL Cloud] Synchronisé avec succès (${this.athletes.length} athlètes, ${this.sessions.length} séances).`);
+          this.saveToFileOnly();
+        } else {
+          // La table cloud est vierge : on sauvegarde nos données initiales dans PostgreSQL
+          const payload = {
+            users: this.users,
+            groups: this.groups,
+            athletes: this.athletes,
+            sessions: this.sessions,
+            attendances: this.attendances,
+            swimmingTimes: this.swimmingTimes,
+          };
+          await client.query(
+            `INSERT INTO ascos_cloud_store (id, data, updated_at) VALUES ('main', $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW();`,
+            [payload]
+          );
+          console.log(`🌐 [PostgreSQL Cloud] Table initialisée avec les données actuelles.`);
+        }
+
+        this.isPgConnected = true;
+        this.pgStatusText = 'Base PostgreSQL Cloud Connectée & Active (Persistance 100%)';
+      } finally {
+        client.release();
+      }
+    } catch (err: any) {
+      console.warn('ℹ️ PostgreSQL non disponible (repli sur stockage fichier JSON local) :', err.message);
+      this.isPgConnected = false;
+      this.pgStatusText = 'Mode Fichier Local (JSON)';
+    }
   }
 
   public saveToFile(): void {
+    this.saveToFileOnly();
+    this.saveToPostgresAsync();
+  }
+
+  private saveToFileOnly(): void {
     try {
       if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -177,6 +254,27 @@ export class AscosStore {
       console.log(`💾 Données sauvegardées dans ${DATA_FILE} (${this.athletes.length} athlètes, ${this.users.length} comptes)`);
     } catch (err) {
       console.warn('⚠️ Impossible de sauvegarder ascos_store.json :', err);
+    }
+  }
+
+  private async saveToPostgresAsync(): Promise<void> {
+    if (!this.isPgConnected || !this.pgPool) return;
+    try {
+      const payload = {
+        users: this.users,
+        groups: this.groups,
+        athletes: this.athletes,
+        sessions: this.sessions,
+        attendances: this.attendances,
+        swimmingTimes: this.swimmingTimes,
+      };
+      await this.pgPool.query(
+        `INSERT INTO ascos_cloud_store (id, data, updated_at) VALUES ('main', $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW();`,
+        [payload]
+      );
+      console.log(`☁️ [PostgreSQL Cloud] Données sauvegardées en ligne avec succès.`);
+    } catch (err: any) {
+      console.warn('⚠️ Erreur sauvegarde PostgreSQL Cloud :', err.message);
     }
   }
 

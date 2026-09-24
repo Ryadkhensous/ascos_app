@@ -283,7 +283,13 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     <header>
       <div class="title-group">
         <h1>🏊 ASCOS Natation &bull; Base de Données</h1>
-        <p>Hébergée en direct sur Render Cloud &bull; Données temps réel</p>
+        <p style="margin-top: 0.4rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span>Données en temps réel &bull;</span>
+          ${dbStore.isPgConnected
+            ? '<span class="badge badge-green">🟢 Base PostgreSQL Cloud Active (Persistance 100%)</span>'
+            : '<span class="badge badge-cyan">📁 Stockage Fichier (ascos_store.json)</span>'
+          }
+        </p>
       </div>
       <div class="actions">
         <a href="/api/database/backup.json" class="btn btn-primary" download>📥 Télécharger la Sauvegarde (.json)</a>
