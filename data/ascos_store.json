@@ -2,79 +2,79 @@
   "users": [
     {
       "id": "user-admin-1",
-      "username": "admin",
-      "email": "admin@ascos.fr",
-      "passwordHash": "$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq",
-      "firstName": "Administrateur",
-      "lastName": "ASCOS",
       "role": "ADMIN",
+      "email": "admin@ascos.fr",
       "phone": "+33 1 23 45 67 89",
+      "lastName": "ASCOS",
+      "username": "admin",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "firstName": "Administrateur",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "passwordHash": "$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq",
       "assignedGroup": "Tous les groupes",
       "assignedGroups": [
         "Tous les groupes"
-      ],
-      "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z"
+      ]
     },
     {
       "id": "user-1790199580896",
-      "username": "coach_florent",
-      "email": "coach_florent@ascos.fr",
-      "passwordHash": "$2a$10$88SBYCnTYOzmoP6bEJFyt.uqHHi1DMBr4jAVvTnm7d6IsVLAlOnHu",
-      "firstName": "Florent",
-      "lastName": "Manaudou",
       "role": "COACH",
+      "email": "coach_florent@ascos.fr",
+      "phone": "",
+      "lastName": "Manaudou",
+      "username": "coach_florent",
+      "createdAt": "2026-09-23T21:39:40.896Z",
+      "firstName": "Florent",
+      "updatedAt": "2026-09-23T21:39:40.896Z",
+      "passwordHash": "$2a$10$88SBYCnTYOzmoP6bEJFyt.uqHHi1DMBr4jAVvTnm7d6IsVLAlOnHu",
+      "assignedGroup": "Groupe Élite",
       "assignedGroups": [
         "Groupe Élite"
-      ],
-      "assignedGroup": "Groupe Élite",
-      "phone": "",
-      "createdAt": "2026-09-23T21:39:40.896Z",
-      "updatedAt": "2026-09-23T21:39:40.896Z"
+      ]
     }
   ],
   "groups": [
     {
       "id": "grp-elite",
       "name": "Groupe Élite",
-      "description": "Nageurs de niveau national et international (cadences élevées, travail au centième)",
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "description": "Nageurs de niveau national et international (cadences élevées, travail au centième)"
     },
     {
       "id": "grp-perf",
       "name": "Groupe Performance",
-      "description": "Nageurs régionaux et interrégionaux visant les qualifications nationales",
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "description": "Nageurs régionaux et interrégionaux visant les qualifications nationales"
     },
     {
       "id": "grp-espoirs",
       "name": "Groupe Espoirs",
-      "description": "Jeunes talents en perfectionnement technique des 4 nages et départs/virages",
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "description": "Jeunes talents en perfectionnement technique des 4 nages et départs/virages"
     },
     {
       "id": "grp-ecole",
       "name": "École de Natation",
-      "description": "Apprentissage et validation du Sauv'nage et du Pass'sports de l'eau",
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "description": "Apprentissage et validation du Sauv'nage et du Pass'sports de l'eau"
     }
   ],
   "athletes": [
     {
       "id": "ath-1790199576667-857",
-      "firstName": "Léon",
-      "lastName": "Marchand",
-      "dateOfBirth": "2002-05-17",
       "gender": "MALE",
       "category": "Séniors & Maîtres (19+ ans)",
+      "lastName": "Marchand",
+      "firstName": "Léon",
       "groupName": "Groupe Élite",
+      "dateOfBirth": "2002-05-17",
       "licenseNumber": "FFN-971811",
-      "attendanceRate": 100,
       "totalSessions": 0,
+      "attendanceRate": 100,
       "attendedSessions": 0
     }
   ],
@@ -82,57 +82,57 @@
     {
       "id": "sess-2026-09-23-tous-les-groupes-2832",
       "date": "2026-09-23",
-      "groupName": "Tous les groupes",
-      "title": "Séance Commune Club",
-      "startTime": "18:00",
-      "endTime": "19:30",
-      "poolType": "POOL_25M",
       "focus": "Échauffement & Aérobie",
-      "location": "Bassin d'entraînement (25m)"
+      "title": "Séance Commune Club",
+      "endTime": "19:30",
+      "location": "Bassin d'entraînement (25m)",
+      "poolType": "POOL_25M",
+      "groupName": "Tous les groupes",
+      "startTime": "18:00"
     },
     {
       "id": "sess-2026-09-23-groupe-elite-2985",
       "date": "2026-09-23",
-      "groupName": "Groupe Élite",
-      "title": "Aérobie & Vitesse Compétition",
-      "startTime": "18:00",
-      "endTime": "20:00",
-      "poolType": "POOL_50M",
       "focus": "Cadences & Chronos Officiels",
-      "location": "Bassin Olympique (50m)"
+      "title": "Aérobie & Vitesse Compétition",
+      "endTime": "20:00",
+      "location": "Bassin Olympique (50m)",
+      "poolType": "POOL_50M",
+      "groupName": "Groupe Élite",
+      "startTime": "18:00"
     },
     {
       "id": "sess-2026-09-23-groupe-performance-5061",
       "date": "2026-09-23",
-      "groupName": "Groupe Performance",
-      "title": "Technique 4 Nages & Virages",
-      "startTime": "19:00",
-      "endTime": "20:30",
-      "poolType": "POOL_25M",
       "focus": "Coulées, Virages & Départs",
-      "location": "Bassin d'entraînement (25m)"
+      "title": "Technique 4 Nages & Virages",
+      "endTime": "20:30",
+      "location": "Bassin d'entraînement (25m)",
+      "poolType": "POOL_25M",
+      "groupName": "Groupe Performance",
+      "startTime": "19:00"
     },
     {
       "id": "sess-2026-09-23-groupe-espoirs-3181",
       "date": "2026-09-23",
-      "groupName": "Groupe Espoirs",
-      "title": "Perfectionnement Nage Libre & Dos",
-      "startTime": "17:30",
-      "endTime": "19:00",
-      "poolType": "POOL_25M",
       "focus": "Technique de nage & endurance",
-      "location": "Bassin d'entraînement (25m)"
+      "title": "Perfectionnement Nage Libre & Dos",
+      "endTime": "19:00",
+      "location": "Bassin d'entraînement (25m)",
+      "poolType": "POOL_25M",
+      "groupName": "Groupe Espoirs",
+      "startTime": "17:30"
     },
     {
       "id": "sess-2026-09-23-ecole-de-natation-9394",
       "date": "2026-09-23",
-      "groupName": "École de Natation",
-      "title": "Apprentissage & Sécurité Aquatique",
-      "startTime": "16:30",
-      "endTime": "17:30",
-      "poolType": "POOL_25M",
       "focus": "Flottaison, Propulsion & Respiration",
-      "location": "Petit Bassin d'apprentissage"
+      "title": "Apprentissage & Sécurité Aquatique",
+      "endTime": "17:30",
+      "location": "Petit Bassin d'apprentissage",
+      "poolType": "POOL_25M",
+      "groupName": "École de Natation",
+      "startTime": "16:30"
     }
   ],
   "attendances": [],

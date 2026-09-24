@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config();
 import { Pool } from 'pg';
 
 function resolveDataPaths(): { dataDir: string; dataFile: string } {
