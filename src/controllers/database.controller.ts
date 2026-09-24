@@ -153,6 +153,11 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     return safe;
   });
 
+  const allGroupNames = [
+    'Tous les groupes',
+    ...Array.from(new Set(dbStore.groups.map((g) => g.name))),
+  ];
+
   const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -204,6 +209,39 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     .badge-green { color: var(--green); border-color: rgba(16,185,129,0.3); }
     .badge-gold { color: var(--gold); border-color: rgba(255,179,0,0.3); }
     .empty-state { padding: 3rem; text-align: center; color: var(--text-muted); }
+
+    /* Styles pour la gestion des comptes & modales */
+    .tab-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; }
+    .tab-header-bar h2 { font-size: 1.2rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+    .tab-header-bar p { color: var(--text-muted); font-size: 0.85rem; margin: 0.2rem 0 0; }
+    .action-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; text-decoration: none; }
+    .action-btn-edit { background: rgba(0, 229, 255, 0.15); color: var(--cyan); border: 1px solid rgba(0, 229, 255, 0.3); }
+    .action-btn-edit:hover { background: var(--cyan); color: #0A192F; }
+    .action-btn-delete { background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .action-btn-delete:hover:not(:disabled) { background: #EF4444; color: #fff; }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .actions-cell { display: flex; gap: 0.5rem; align-items: center; }
+
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(10, 25, 47, 0.85); backdrop-filter: blur(6px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem; }
+    .modal-backdrop.active { display: flex; }
+    .modal-card { background: #112240; border: 1px solid #334155; border-radius: 16px; width: 100%; max-width: 580px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75); overflow: hidden; animation: modalIn 0.2s ease-out; }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #334155; }
+    .modal-header h3 { color: var(--cyan); font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    .modal-close { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; line-height: 1; padding: 0.2rem 0.5rem; border-radius: 4px; }
+    .modal-close:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .modal-body { padding: 1.5rem; max-height: calc(85vh - 140px); overflow-y: auto; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #334155; display: flex; justify-content: flex-end; gap: 0.8rem; background: rgba(0, 0, 0, 0.2); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group.full { grid-column: span 2; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control { width: 100%; background: #0A192F; border: 1px solid #334155; border-radius: 8px; padding: 0.65rem 0.9rem; color: #fff; font-size: 0.92rem; outline: none; transition: 0.2s; box-sizing: border-box; }
+    .form-control:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.25); }
+    .checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.4rem; }
+    .checkbox-item { display: flex; align-items: center; gap: 0.6rem; background: rgba(30, 58, 138, 0.15); padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid #334155; font-size: 0.85rem; cursor: pointer; user-select: none; }
+    .checkbox-item:hover { border-color: var(--cyan); }
+    .checkbox-item input { accent-color: var(--cyan); width: 16px; height: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -391,6 +429,14 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
 
     <!-- ONGLET COMPTES -->
     <div id="tab-users" class="tab-content">
+      <div class="tab-header-bar">
+        <div>
+          <h2>👥 Gestion des Comptes (Entraîneurs & Administrateurs)</h2>
+          <p>Créez, modifiez ou supprimez les comptes des coachs et administrateurs du club</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateUserModal()">➕ Ajouter un Compte</button>
+      </div>
+
       <div class="table-card">
         <table>
           <thead>
@@ -398,20 +444,33 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
               <th>Nom & Prénom</th>
               <th>Identifiant</th>
               <th>Email</th>
+              <th>Téléphone</th>
               <th>Rôle</th>
               <th>Groupes Assignés</th>
+              <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
             ${safeUsers
               .map(
-                (u) => `<tr>
+                (u) => {
+                  const uB64 = Buffer.from(JSON.stringify(u)).toString('base64');
+                  const isLastAdmin = u.role === 'ADMIN' && safeUsers.filter((x) => x.role === 'ADMIN').length <= 1;
+                  return `<tr>
               <td style="font-weight: bold; color: #fff;">${u.firstName} ${u.lastName}</td>
               <td><code>${u.username || '-'}</code></td>
               <td>${u.email || '-'}</td>
+              <td>${u.phone || '-'}</td>
               <td><span class="badge ${u.role === 'ADMIN' ? 'badge-gold' : 'badge-cyan'}">${u.role}</span></td>
               <td>${(u.assignedGroups || [u.assignedGroup || 'Tous les groupes']).join(', ')}</td>
-            </tr>`
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button class="action-btn action-btn-edit" onclick="openEditUserModal('${uB64}')">✏️ Modifier</button>
+                  <button class="action-btn action-btn-delete" onclick="handleDeleteUser('${u.id}', '${u.firstName} ${u.lastName}', '${u.role}')" ${isLastAdmin ? 'disabled title="Dernier compte administrateur non supprimable"' : ''}>🗑️ Supprimer</button>
+                </div>
+              </td>
+            </tr>`;
+                }
               )
               .join('')}
           </tbody>
@@ -424,12 +483,333 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     </footer>
   </div>
 
+  <!-- MODALE CRÉATION UTILISATEUR -->
+  <div id="modal-create-user" class="modal-backdrop" onclick="if(event.target === this) closeUserModals()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>➕ Ajouter un Compte d'accès</h3>
+        <button class="modal-close" onclick="closeUserModals()">&times;</button>
+      </div>
+      <form id="form-create-user" onsubmit="submitCreateUser(event)">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input type="text" id="create-firstName" class="form-control" placeholder="ex: Florent" required>
+            </div>
+            <div class="form-group">
+              <label>Nom *</label>
+              <input type="text" id="create-lastName" class="form-control" placeholder="ex: Manaudou" required>
+            </div>
+            <div class="form-group">
+              <label>Identifiant (Login) *</label>
+              <input type="text" id="create-username" class="form-control" placeholder="ex: coach_florent" required>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="create-email" class="form-control" placeholder="ex: coach@ascos.fr">
+            </div>
+            <div class="form-group">
+              <label>Mot de passe *</label>
+              <input type="password" id="create-password" class="form-control" placeholder="Mot de passe" required minlength="4">
+            </div>
+            <div class="form-group">
+              <label>Rôle *</label>
+              <select id="create-role" class="form-control" required onchange="onRoleChange('create')">
+                <option value="COACH" selected>COACH (Entraîneur)</option>
+                <option value="ADMIN">ADMIN (Administrateur)</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Téléphone (optionnel)</label>
+              <input type="text" id="create-phone" class="form-control" placeholder="ex: +33 6 12 34 56 78">
+            </div>
+            <div class="form-group full">
+              <label>Groupes Assignés *</label>
+              <div class="checkbox-group">
+                ${allGroupNames
+                  .map(
+                    (gn) => `
+                  <label class="checkbox-item">
+                    <input type="checkbox" name="create-groups" value="${gn}" ${gn === 'Groupe Élite' ? 'checked' : ''}>
+                    <span>${gn}</span>
+                  </label>`
+                  )
+                  .join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeUserModals()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-create">Créer le Compte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODALE MODIFICATION UTILISATEUR -->
+  <div id="modal-edit-user" class="modal-backdrop" onclick="if(event.target === this) closeUserModals()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>✏️ Modifier le Compte</h3>
+        <button class="modal-close" onclick="closeUserModals()">&times;</button>
+      </div>
+      <form id="form-edit-user" onsubmit="submitEditUser(event)">
+        <input type="hidden" id="edit-id">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input type="text" id="edit-firstName" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Nom *</label>
+              <input type="text" id="edit-lastName" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Identifiant (Login) *</label>
+              <input type="text" id="edit-username" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="edit-email" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Nouveau Mot de passe (optionnel)</label>
+              <input type="password" id="edit-password" class="form-control" placeholder="Laisser vide pour ne pas changer">
+            </div>
+            <div class="form-group">
+              <label>Rôle *</label>
+              <select id="edit-role" class="form-control" required onchange="onRoleChange('edit')">
+                <option value="COACH">COACH (Entraîneur)</option>
+                <option value="ADMIN">ADMIN (Administrateur)</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Téléphone</label>
+              <input type="text" id="edit-phone" class="form-control">
+            </div>
+            <div class="form-group full">
+              <label>Groupes Assignés *</label>
+              <div class="checkbox-group">
+                ${allGroupNames
+                  .map(
+                    (gn) => `
+                  <label class="checkbox-item">
+                    <input type="checkbox" name="edit-groups" value="${gn}">
+                    <span>${gn}</span>
+                  </label>`
+                  )
+                  .join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeUserModals()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-edit">Enregistrer les Modifications</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     function openTab(evt, tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      evt.currentTarget.classList.add('active');
+      const targetTab = document.getElementById(tabId);
+      if (targetTab) targetTab.classList.add('active');
+
+      if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add('active');
+      } else {
+        const btn = document.querySelector(".tab-btn[onclick*='" + tabId + "']");
+        if (btn) btn.classList.add('active');
+      }
+
+      try {
+        localStorage.setItem('ascos_active_tab', tabId);
+      } catch(_) {}
+    }
+
+    // Restaurer l'onglet actif au chargement
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        const savedTab = localStorage.getItem('ascos_active_tab');
+        if (savedTab && document.getElementById(savedTab)) {
+          openTab(null, savedTab);
+        }
+      } catch(_) {}
+    });
+
+    function closeUserModals() {
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+    }
+
+    function openCreateUserModal() {
+      document.getElementById('form-create-user').reset();
+      document.getElementById('modal-create-user').classList.add('active');
+    }
+
+    function onRoleChange(type) {
+      const role = document.getElementById(type + '-role').value;
+      if (role === 'ADMIN') {
+        const allBox = document.querySelector("input[name='" + type + "-groups'][value='Tous les groupes']");
+        if (allBox) allBox.checked = true;
+      }
+    }
+
+    function openEditUserModal(b64Data) {
+      try {
+        const raw = atob(b64Data);
+        const user = JSON.parse(raw);
+        document.getElementById('edit-id').value = user.id;
+        document.getElementById('edit-firstName').value = user.firstName || '';
+        document.getElementById('edit-lastName').value = user.lastName || '';
+        document.getElementById('edit-username').value = user.username || '';
+        document.getElementById('edit-email').value = user.email || '';
+        document.getElementById('edit-phone').value = user.phone || '';
+        document.getElementById('edit-password').value = '';
+        document.getElementById('edit-role').value = user.role || 'COACH';
+
+        const userGroups = Array.isArray(user.assignedGroups) ? user.assignedGroups : [user.assignedGroup || 'Tous les groupes'];
+        document.querySelectorAll("input[name='edit-groups']").forEach(function(cb) {
+          cb.checked = userGroups.indexOf(cb.value) !== -1;
+        });
+
+        document.getElementById('modal-edit-user').classList.add('active');
+      } catch(e) {
+        alert("Erreur lors du chargement des données de l'utilisateur : " + e.message);
+      }
+    }
+
+    async function submitCreateUser(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-create');
+      btn.disabled = true;
+      btn.innerText = 'Création en cours...';
+
+      const selectedGroups = [];
+      document.querySelectorAll("input[name='create-groups']:checked").forEach(function(cb) {
+        selectedGroups.push(cb.value);
+      });
+
+      if (selectedGroups.length === 0) {
+        alert("Veuillez cocher au moins un groupe assigné.");
+        btn.disabled = false;
+        btn.innerText = "Créer le Compte";
+        return;
+      }
+
+      const payload = {
+        firstName: document.getElementById('create-firstName').value.trim(),
+        lastName: document.getElementById('create-lastName').value.trim(),
+        username: document.getElementById('create-username').value.trim(),
+        email: document.getElementById('create-email').value.trim(),
+        password: document.getElementById('create-password').value,
+        role: document.getElementById('create-role').value,
+        phone: document.getElementById('create-phone').value.trim(),
+        assignedGroups: selectedGroups
+      };
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('ascos_active_tab', 'tab-users');
+          alert("✅ Compte créé avec succès !");
+          window.location.reload();
+        } else {
+          alert("❌ Erreur : " + (data.message || "Impossible de créer le compte"));
+        }
+      } catch(err) {
+        alert("❌ Erreur de communication : " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Créer le Compte";
+      }
+    }
+
+    async function submitEditUser(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-id').value;
+      const btn = document.getElementById('btn-submit-edit');
+      btn.disabled = true;
+      btn.innerText = 'Enregistrement...';
+
+      const selectedGroups = [];
+      document.querySelectorAll("input[name='edit-groups']:checked").forEach(function(cb) {
+        selectedGroups.push(cb.value);
+      });
+
+      if (selectedGroups.length === 0) {
+        alert("Veuillez cocher au moins un groupe assigné.");
+        btn.disabled = false;
+        btn.innerText = "Enregistrer les Modifications";
+        return;
+      }
+
+      const payload = {
+        firstName: document.getElementById('edit-firstName').value.trim(),
+        lastName: document.getElementById('edit-lastName').value.trim(),
+        username: document.getElementById('edit-username').value.trim(),
+        email: document.getElementById('edit-email').value.trim(),
+        role: document.getElementById('edit-role').value,
+        phone: document.getElementById('edit-phone').value.trim(),
+        assignedGroups: selectedGroups
+      };
+
+      const newPass = document.getElementById('edit-password').value;
+      if (newPass && newPass.trim().length > 0) {
+        payload.password = newPass.trim();
+      }
+
+      try {
+        const res = await fetch('/api/auth/users/' + encodeURIComponent(id), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('ascos_active_tab', 'tab-users');
+          alert("✅ Compte mis à jour avec succès !");
+          window.location.reload();
+        } else {
+          alert("❌ Erreur : " + (data.message || "Impossible de modifier le compte"));
+        }
+      } catch(err) {
+        alert("❌ Erreur de communication : " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Enregistrer les Modifications";
+      }
+    }
+
+    async function handleDeleteUser(id, fullName, role) {
+      const confirmDelete = confirm("⚠️ Êtes-vous sûr de vouloir supprimer définitivement le compte de " + fullName + " (" + role + ") ?");
+      if (!confirmDelete) return;
+
+      try {
+        const res = await fetch('/api/auth/users/' + encodeURIComponent(id), {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('ascos_active_tab', 'tab-users');
+          alert("✅ " + data.message);
+          window.location.reload();
+        } else {
+          alert("❌ Erreur : " + (data.message || "Impossible de supprimer le compte"));
+        }
+      } catch(err) {
+        alert("❌ Erreur de communication : " + err.message);
+      }
     }
 
     async function handleResetDb() {

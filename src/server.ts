@@ -313,8 +313,11 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 // Démarrage du serveur
 const server = app.listen(Number(PORT), '0.0.0.0', () => {
   console.log('🏊 =========================================');
-  console.log(`🚀 Serveur ASCOS API démarré sur http://0.0.0.0:${PORT} (Accessible sur le réseau local)`);
-  console.log(`📑 Documentation : http://localhost:${PORT}/api/docs`);
+  console.log(`🚀 Serveur ASCOS API démarré sur port ${PORT} :`);
+  console.log(`   👉 PC / Web / Bureau : http://localhost:${PORT}/api`);
+  console.log(`   👉 Émulateur Android : http://10.0.2.2:${PORT}/api`);
+  console.log(`   👉 Réseau Wi-Fi      : http://0.0.0.0:${PORT}/api`);
+  console.log(`📑 Documentation & DB : http://localhost:${PORT}/api/docs`);
   console.log(`📊 Mode : ${process.env.NODE_ENV || 'development'}`);
   console.log('🏊 =========================================');
 });

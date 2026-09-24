@@ -1,8 +1,25 @@
 import fs from 'fs';
 import path from 'path';
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
-const DATA_FILE = path.join(DATA_DIR, 'ascos_store.json');
+function resolveDataPaths(): { dataDir: string; dataFile: string } {
+  const candidateDirs = [
+    path.resolve(__dirname, '../../data'),
+    path.resolve(__dirname, '../data'),
+    path.resolve(process.cwd(), 'ascos-backend/data'),
+    path.resolve(process.cwd(), 'data'),
+  ];
+  for (const dir of candidateDirs) {
+    const file = path.join(dir, 'ascos_store.json');
+    if (fs.existsSync(file)) {
+      return { dataDir: dir, dataFile: file };
+    }
+  }
+  // Dossier par défaut : ascos-backend/data
+  const fallbackDir = path.resolve(__dirname, '../../data');
+  return { dataDir: fallbackDir, dataFile: path.join(fallbackDir, 'ascos_store.json') };
+}
+
+const { dataDir: DATA_DIR, dataFile: DATA_FILE } = resolveDataPaths();
 
 export interface AthleteData {
   id: string;
@@ -157,6 +174,7 @@ export class AscosStore {
         swimmingTimes: this.swimmingTimes,
       };
       fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+      console.log(`💾 Données sauvegardées dans ${DATA_FILE} (${this.athletes.length} athlètes, ${this.users.length} comptes)`);
     } catch (err) {
       console.warn('⚠️ Impossible de sauvegarder ascos_store.json :', err);
     }
@@ -173,7 +191,9 @@ export class AscosStore {
         if (Array.isArray(parsed.sessions)) this.sessions = parsed.sessions;
         if (Array.isArray(parsed.attendances)) this.attendances = parsed.attendances;
         if (Array.isArray(parsed.swimmingTimes)) this.swimmingTimes = parsed.swimmingTimes;
-        console.log(`💾 Données ASCOS chargées depuis le fichier local (${this.athletes.length} athlètes, ${this.groups.length} groupes, ${this.users.length} utilisateurs)`);
+        console.log(`💾 Données ASCOS chargées depuis ${DATA_FILE} (${this.athletes.length} athlètes, ${this.groups.length} groupes, ${this.users.length} utilisateurs)`);
+      } else {
+        console.log(`ℹ️ Aucun fichier existant sur ${DATA_FILE}, initialisation avec données par défaut.`);
       }
     } catch (err) {
       console.warn('⚠️ Impossible de lire ascos_store.json :', err);

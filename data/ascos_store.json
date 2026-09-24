@@ -15,6 +15,22 @@
       ],
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "user-1790199580896",
+      "username": "coach_florent",
+      "email": "coach_florent@ascos.fr",
+      "passwordHash": "$2a$10$88SBYCnTYOzmoP6bEJFyt.uqHHi1DMBr4jAVvTnm7d6IsVLAlOnHu",
+      "firstName": "Florent",
+      "lastName": "Manaudou",
+      "role": "COACH",
+      "assignedGroups": [
+        "Groupe Élite"
+      ],
+      "assignedGroup": "Groupe Élite",
+      "phone": "",
+      "createdAt": "2026-09-23T21:39:40.896Z",
+      "updatedAt": "2026-09-23T21:39:40.896Z"
     }
   ],
   "groups": [
@@ -47,8 +63,78 @@
       "updatedAt": "2026-01-01T00:00:00.000Z"
     }
   ],
-  "athletes": [],
-  "sessions": [],
+  "athletes": [
+    {
+      "id": "ath-1790199576667-857",
+      "firstName": "Léon",
+      "lastName": "Marchand",
+      "dateOfBirth": "2002-05-17",
+      "gender": "MALE",
+      "category": "Séniors & Maîtres (19+ ans)",
+      "groupName": "Groupe Élite",
+      "licenseNumber": "FFN-971811",
+      "attendanceRate": 100,
+      "totalSessions": 0,
+      "attendedSessions": 0
+    }
+  ],
+  "sessions": [
+    {
+      "id": "sess-2026-09-23-tous-les-groupes-2832",
+      "date": "2026-09-23",
+      "groupName": "Tous les groupes",
+      "title": "Séance Commune Club",
+      "startTime": "18:00",
+      "endTime": "19:30",
+      "poolType": "POOL_25M",
+      "focus": "Échauffement & Aérobie",
+      "location": "Bassin d'entraînement (25m)"
+    },
+    {
+      "id": "sess-2026-09-23-groupe-elite-2985",
+      "date": "2026-09-23",
+      "groupName": "Groupe Élite",
+      "title": "Aérobie & Vitesse Compétition",
+      "startTime": "18:00",
+      "endTime": "20:00",
+      "poolType": "POOL_50M",
+      "focus": "Cadences & Chronos Officiels",
+      "location": "Bassin Olympique (50m)"
+    },
+    {
+      "id": "sess-2026-09-23-groupe-performance-5061",
+      "date": "2026-09-23",
+      "groupName": "Groupe Performance",
+      "title": "Technique 4 Nages & Virages",
+      "startTime": "19:00",
+      "endTime": "20:30",
+      "poolType": "POOL_25M",
+      "focus": "Coulées, Virages & Départs",
+      "location": "Bassin d'entraînement (25m)"
+    },
+    {
+      "id": "sess-2026-09-23-groupe-espoirs-3181",
+      "date": "2026-09-23",
+      "groupName": "Groupe Espoirs",
+      "title": "Perfectionnement Nage Libre & Dos",
+      "startTime": "17:30",
+      "endTime": "19:00",
+      "poolType": "POOL_25M",
+      "focus": "Technique de nage & endurance",
+      "location": "Bassin d'entraînement (25m)"
+    },
+    {
+      "id": "sess-2026-09-23-ecole-de-natation-9394",
+      "date": "2026-09-23",
+      "groupName": "École de Natation",
+      "title": "Apprentissage & Sécurité Aquatique",
+      "startTime": "16:30",
+      "endTime": "17:30",
+      "poolType": "POOL_25M",
+      "focus": "Flottaison, Propulsion & Respiration",
+      "location": "Petit Bassin d'apprentissage"
+    }
+  ],
   "attendances": [],
   "swimmingTimes": []
 }
