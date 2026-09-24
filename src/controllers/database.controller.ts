@@ -200,6 +200,18 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     role: u.role,
   }));
 
+  const enrichedAttendances = dbStore.attendances.map((att) => {
+    const ath = dbStore.athletes.find((a) => a.id === att.athleteId);
+    const sess = dbStore.sessions.find((s) => s.id === att.sessionId);
+    return {
+      ...att,
+      athleteName: ath ? `${ath.firstName} ${ath.lastName}` : 'Nageur archivé',
+      sessionTitle: sess ? sess.title : 'Séance archivée',
+      sessionDate: sess ? sess.date : '-',
+      groupName: ath ? ath.groupName : (sess ? sess.groupName : '-'),
+    };
+  });
+
   const escapeQuote = (str: string) => (str || '').replace(/'/g, "\\'");
 
   const html = `<!DOCTYPE html>
@@ -235,11 +247,12 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     .btn-danger { background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); }
     .btn-danger:hover { background: #EF4444; color: #FFFFFF; }
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; cursor: pointer; transition: 0.2s; }
+    .stat-card:hover { border-color: var(--cyan); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 229, 255, 0.12); }
     .stat-val { font-size: 2rem; font-weight: 800; color: var(--cyan); margin-bottom: 0.2rem; }
     .stat-lbl { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
     .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
-    .tab-btn { background: transparent; border: none; color: var(--text-muted); padding: 0.8rem 1.4rem; font-weight: 600; font-size: 0.95rem; cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab-btn { background: transparent; border: none; color: var(--text-muted); padding: 0.8rem 1.4rem; font-weight: 600; font-size: 0.95rem; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
     .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -255,9 +268,10 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     .empty-state { padding: 3rem; text-align: center; color: var(--text-muted); }
 
     /* En-têtes d'onglets & boutons d'action */
-    .tab-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; }
+    .tab-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
     .tab-header-bar h2 { font-size: 1.2rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
     .tab-header-bar p { color: var(--text-muted); font-size: 0.85rem; margin: 0.2rem 0 0; }
+    .filter-bar { display: flex; justify-content: flex-end; margin-bottom: 0.8rem; }
     .action-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; text-decoration: none; }
     .action-btn-edit { background: rgba(0, 229, 255, 0.15); color: var(--cyan); border: 1px solid rgba(0, 229, 255, 0.3); }
     .action-btn-edit:hover { background: var(--cyan); color: #0A192F; }
@@ -312,27 +326,27 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     </header>
 
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card" onclick="openTab(null, 'tab-athletes')" title="Cliquez pour afficher les Nageurs">
         <div class="stat-val">${dbStore.athletes.length}</div>
         <div class="stat-lbl">Nageurs</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="openTab(null, 'tab-sessions')" title="Cliquez pour afficher les Séances">
         <div class="stat-val">${dbStore.sessions.length}</div>
         <div class="stat-lbl">Séances</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="openTab(null, 'tab-attendances')" title="Cliquez pour afficher les Pointages">
         <div class="stat-val">${dbStore.attendances.length}</div>
         <div class="stat-lbl">Pointages</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="openTab(null, 'tab-times')" title="Cliquez pour afficher les Chronos">
         <div class="stat-val">${dbStore.swimmingTimes.length}</div>
         <div class="stat-lbl">Chronos & Records</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="openTab(null, 'tab-groups')" title="Cliquez pour afficher les Groupes">
         <div class="stat-val">${dbStore.groups.length}</div>
         <div class="stat-lbl">Groupes</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="openTab(null, 'tab-users')" title="Cliquez pour afficher les Comptes">
         <div class="stat-val">${dbStore.users.length}</div>
         <div class="stat-lbl">Utilisateurs / Coachs</div>
       </div>
@@ -341,6 +355,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     <div class="tabs">
       <button class="tab-btn active" onclick="openTab(event, 'tab-athletes')">👥 Nageurs (${dbStore.athletes.length})</button>
       <button class="tab-btn" onclick="openTab(event, 'tab-sessions')">📅 Séances (${dbStore.sessions.length})</button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-attendances')">📋 Pointages (${dbStore.attendances.length})</button>
       <button class="tab-btn" onclick="openTab(event, 'tab-times')">⏱️ Chronos (${dbStore.swimmingTimes.length})</button>
       <button class="tab-btn" onclick="openTab(event, 'tab-groups')">🏊 Groupes (${dbStore.groups.length})</button>
       <button class="tab-btn" onclick="openTab(event, 'tab-users')">👤 Comptes (${dbStore.users.length})</button>
@@ -351,16 +366,25 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       <div class="tab-header-bar">
         <div>
           <h2>👥 Gestion des Nageurs (${dbStore.athletes.length})</h2>
-          <p>Créez, modifiez ou supprimez les profils des nageurs et compétiteurs du club</p>
+          <p>Créez, modifiez, supprimez ou importez les profils des nageurs et compétiteurs du club</p>
         </div>
-        <button class="btn btn-primary" onclick="openCreateAthleteModal()">➕ Ajouter un Nageur</button>
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="handleDownloadExcelTemplate()">📄 Modèle Excel</button>
+          <input type="file" id="file-excel-athletes" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleImportExcelFile(event)">
+          <button class="btn btn-secondary" onclick="document.getElementById('file-excel-athletes').click()">📥 Importer Excel / CSV</button>
+          <button class="btn btn-primary" onclick="openCreateAthleteModal()">➕ Ajouter un Nageur</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" class="form-control" style="max-width: 280px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" placeholder="🔍 Filtrer les nageurs..." oninput="filterTable(this, 'table-athletes')">
       </div>
 
       <div class="table-card">
         ${
           dbStore.athletes.length === 0
             ? '<div class="empty-state">Aucun nageur enregistré dans la base de données. Cliquez sur <strong>➕ Ajouter un Nageur</strong> ci-dessus.</div>'
-            : `<table>
+            : `<table id="table-athletes">
             <thead>
               <tr>
                 <th>Nom & Prénom</th>
@@ -411,11 +435,15 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
         </div>
       </div>
 
+      <div class="filter-bar">
+        <input type="text" class="form-control" style="max-width: 280px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" placeholder="🔍 Filtrer les séances..." oninput="filterTable(this, 'table-sessions')">
+      </div>
+
       <div class="table-card">
         ${
           dbStore.sessions.length === 0
             ? '<div class="empty-state">Aucune séance enregistrée. Cliquez sur <strong>➕ Programmer une Séance</strong> ou <strong>⚡ Générer Séances du Jour</strong>.</div>'
-            : `<table>
+            : `<table id="table-sessions">
             <thead>
               <tr>
                 <th>Titre</th>
@@ -453,6 +481,71 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       </div>
     </div>
 
+    <!-- ONGLET POINTAGES -->
+    <div id="tab-attendances" class="tab-content">
+      <div class="tab-header-bar">
+        <div>
+          <h2>📋 Pointages & Feuilles de Présence (${dbStore.attendances.length})</h2>
+          <p>Consultez, enregistrez, modifiez ou supprimez les pointages d'assiduité des nageurs</p>
+        </div>
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+          <a href="/api/attendance/export/csv" class="btn btn-secondary">📥 Exporter CSV (.csv)</a>
+          <button class="btn btn-primary" onclick="openCreateAttendanceModal()">➕ Noter une Présence</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" class="form-control" style="max-width: 280px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" placeholder="🔍 Filtrer les pointages..." oninput="filterTable(this, 'table-attendances')">
+      </div>
+
+      <div class="table-card">
+        ${
+          dbStore.attendances.length === 0
+            ? '<div class="empty-state">Aucun pointage enregistré pour le moment. Cliquez sur <strong>➕ Noter une Présence</strong> ci-dessus.</div>'
+            : `<table id="table-attendances">
+            <thead>
+              <tr>
+                <th>Date & Séance</th>
+                <th>Nageur</th>
+                <th>Groupe</th>
+                <th>Statut</th>
+                <th>Remarques</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${enrichedAttendances
+                .map((att) => {
+                  const attB64 = Buffer.from(JSON.stringify(att)).toString('base64');
+                  let statusBadge = '<span class="badge badge-green">✅ Présent</span>';
+                  if (att.status === 'LATE') statusBadge = '<span class="badge badge-gold">⏰ Retard</span>';
+                  else if (att.status === 'EXCUSED') statusBadge = '<span class="badge badge-cyan">✉️ Excusé</span>';
+                  else if (att.status === 'ABSENT') statusBadge = '<span class="badge" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.4);">❌ Absent</span>';
+
+                  return `<tr>
+                <td style="font-weight: bold; color: #fff;">
+                  <div>${att.sessionDate}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">${att.sessionTitle}</div>
+                </td>
+                <td style="font-weight: 600; color: #fff;">${att.athleteName}</td>
+                <td><span class="badge badge-cyan">${att.groupName}</span></td>
+                <td>${statusBadge}</td>
+                <td style="color: var(--text-muted); font-style: italic;">${att.notes || '-'}</td>
+                <td style="text-align: right;">
+                  <div class="actions-cell" style="justify-content: flex-end;">
+                    <button class="action-btn action-btn-edit" onclick="openEditAttendanceModal('${attB64}')">✏️ Modifier</button>
+                    <button class="action-btn action-btn-delete" onclick="handleDeleteAttendance('${att.id}', '${escapeQuote(att.athleteName)}')">🗑️ Supprimer</button>
+                  </div>
+                </td>
+              </tr>`;
+                })
+                .join('')}
+            </tbody>
+          </table>`
+        }
+      </div>
+    </div>
+
     <!-- ONGLET CHRONOS -->
     <div id="tab-times" class="tab-content">
       <div class="tab-header-bar">
@@ -463,11 +556,15 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
         <button class="btn btn-primary" onclick="openCreateTimeModal()">➕ Enregistrer un Chrono</button>
       </div>
 
+      <div class="filter-bar">
+        <input type="text" class="form-control" style="max-width: 280px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" placeholder="🔍 Filtrer les chronos..." oninput="filterTable(this, 'table-times')">
+      </div>
+
       <div class="table-card">
         ${
           dbStore.swimmingTimes.length === 0
             ? '<div class="empty-state">Aucun chronomètre enregistré pour le moment. Cliquez sur <strong>➕ Enregistrer un Chrono</strong> ci-dessus.</div>'
-            : `<table>
+            : `<table id="table-times">
             <thead>
               <tr>
                 <th>Nageur</th>
@@ -515,11 +612,15 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
         <button class="btn btn-primary" onclick="openCreateGroupModal()">➕ Nouveau Groupe</button>
       </div>
 
+      <div class="filter-bar">
+        <input type="text" class="form-control" style="max-width: 280px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" placeholder="🔍 Filtrer les groupes..." oninput="filterTable(this, 'table-groups')">
+      </div>
+
       <div class="table-card">
         ${
           dbStore.groups.length === 0
             ? '<div class="empty-state">Aucun groupe enregistré. Cliquez sur <strong>➕ Nouveau Groupe</strong> ci-dessus.</div>'
-            : `<table>
+            : `<table id="table-groups">
             <thead>
               <tr>
                 <th>Nom du Groupe</th>
@@ -561,8 +662,12 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
         <button class="btn btn-primary" onclick="openCreateUserModal()">➕ Ajouter un Compte</button>
       </div>
 
+      <div class="filter-bar">
+        <input type="text" class="form-control" style="max-width: 280px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" placeholder="🔍 Filtrer les comptes..." oninput="filterTable(this, 'table-users')">
+      </div>
+
       <div class="table-card">
-        <table>
+        <table id="table-users">
           <thead>
             <tr>
               <th>Nom & Prénom</th>
@@ -848,6 +953,102 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModals()">Annuler</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-edit-sess">Enregistrer les Modifications</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODALES POINTAGES ==================== -->
+  <!-- Modale Création Pointage -->
+  <div id="modal-create-attendance" class="modal-backdrop" onclick="if(event.target === this) closeModals()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>➕ Noter une Présence</h3>
+        <button class="modal-close" onclick="closeModals()">&times;</button>
+      </div>
+      <form id="form-create-attendance" onsubmit="submitCreateAttendance(event)">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Séance Concernée *</label>
+              <select id="create-att-sessionId" class="form-control" required>
+                ${
+                  dbStore.sessions.length === 0
+                    ? '<option value="" disabled selected>Aucune séance créée - Créez d\'abord une séance</option>'
+                    : dbStore.sessions.map((s) => `<option value="${s.id}">${s.date} &bull; ${s.title} (${s.groupName})</option>`).join('')
+                }
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Nageur *</label>
+              <select id="create-att-athleteId" class="form-control" required>
+                ${
+                  dbStore.athletes.length === 0
+                    ? '<option value="" disabled selected>Aucun nageur disponible - Créez d\'abord un nageur</option>'
+                    : dbStore.athletes.map((a) => `<option value="${a.id}">${a.firstName} ${a.lastName} (${a.groupName})</option>`).join('')
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Statut de Présence *</label>
+              <select id="create-att-status" class="form-control" required>
+                <option value="PRESENT" selected>✅ Présent</option>
+                <option value="LATE">⏰ En Retard</option>
+                <option value="EXCUSED">✉️ Excusé</option>
+                <option value="ABSENT">❌ Absent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Remarques / Motif (optionnel)</label>
+              <input type="text" id="create-att-notes" class="form-control" placeholder="ex: Retard transport, certif médical">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModals()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-create-att">Enregistrer la Présence</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale Modification Pointage -->
+  <div id="modal-edit-attendance" class="modal-backdrop" onclick="if(event.target === this) closeModals()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>✏️ Modifier le Pointage</h3>
+        <button class="modal-close" onclick="closeModals()">&times;</button>
+      </div>
+      <form id="form-edit-attendance" onsubmit="submitEditAttendance(event)">
+        <input type="hidden" id="edit-att-id">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Nageur</label>
+              <input type="text" id="edit-att-athleteName" class="form-control" disabled style="opacity: 0.8;">
+            </div>
+            <div class="form-group full">
+              <label>Séance</label>
+              <input type="text" id="edit-att-sessionTitle" class="form-control" disabled style="opacity: 0.8;">
+            </div>
+            <div class="form-group">
+              <label>Statut de Présence *</label>
+              <select id="edit-att-status" class="form-control" required>
+                <option value="PRESENT">✅ Présent</option>
+                <option value="LATE">⏰ En Retard</option>
+                <option value="EXCUSED">✉️ Excusé</option>
+                <option value="ABSENT">❌ Absent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Remarques / Motif</label>
+              <input type="text" id="edit-att-notes" class="form-control" placeholder="ex: Certificat médical fourni">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModals()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-edit-att">Enregistrer les Modifications</button>
         </div>
       </form>
     </div>
@@ -1227,6 +1428,16 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       } catch(_) {}
     }
 
+    // Filtrage dynamique en temps réel de n'importe quel tableau
+    function filterTable(input, tableId) {
+      var query = (input.value || '').toLowerCase().trim();
+      var rows = document.querySelectorAll('#' + tableId + ' tbody tr');
+      rows.forEach(function(row) {
+        var text = row.innerText.toLowerCase();
+        row.style.display = text.indexOf(query) !== -1 ? '' : 'none';
+      });
+    }
+
     // Restaurer l'onglet actif au chargement
     window.addEventListener('DOMContentLoaded', function() {
       try {
@@ -1387,6 +1598,71 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       }
     }
 
+    // Télécharger le modèle Excel officiel
+    async function handleDownloadExcelTemplate() {
+      try {
+        var res = await fetch('/api/athletes/template-excel');
+        var data = await res.json();
+        if (data.success && data.base64) {
+          var byteChars = atob(data.base64);
+          var byteNums = new Array(byteChars.length);
+          for (var i = 0; i < byteChars.length; i++) {
+            byteNums[i] = byteChars.charCodeAt(i);
+          }
+          var byteArray = new Uint8Array(byteNums);
+          var blob = new Blob([byteArray], { type: data.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          var link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = data.fileName || 'modele_import_nageurs_ascos.xlsx';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          alert("❌ Impossible de télécharger le modèle");
+        }
+      } catch(err) {
+        alert("❌ Erreur : " + err.message);
+      }
+    }
+
+    // Importer les nageurs depuis Excel ou CSV
+    async function handleImportExcelFile(evt) {
+      var file = evt.target.files && evt.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          var arrayBuffer = e.target.result;
+          var bytes = new Uint8Array(arrayBuffer);
+          var binary = '';
+          for (var i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          var base64 = btoa(binary);
+
+          var res = await fetch('/api/athletes/import-excel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileBase64: base64 })
+          });
+          var data = await res.json();
+          if (data.success) {
+            localStorage.setItem('ascos_active_tab', 'tab-athletes');
+            alert("✅ " + data.message);
+            window.location.reload();
+          } else {
+            alert("❌ Erreur : " + (data.message || "Erreur lors de l'import"));
+          }
+        } catch(err) {
+          alert("❌ Erreur lors de l'analyse du fichier : " + err.message);
+        } finally {
+          evt.target.value = '';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
     // ==================== GESTION DES SÉANCES ====================
     function openCreateSessionModal() {
       document.getElementById('form-create-session').reset();
@@ -1519,6 +1795,109 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
           window.location.reload();
         } else {
           alert('❌ Erreur : ' + (data.message || 'Impossible de générer les séances'));
+        }
+      } catch(err) {
+        alert('❌ Erreur réseau : ' + err.message);
+      }
+    }
+
+    // ==================== GESTION DES POINTAGES & PRÉSENCES ====================
+    function openCreateAttendanceModal() {
+      document.getElementById('form-create-attendance').reset();
+      document.getElementById('modal-create-attendance').classList.add('active');
+    }
+
+    function openEditAttendanceModal(b64) {
+      var att = decodeB64(b64);
+      if (!att) return;
+      document.getElementById('edit-att-id').value = att.id;
+      document.getElementById('edit-att-athleteName').value = att.athleteName || 'Nageur';
+      document.getElementById('edit-att-sessionTitle').value = (att.sessionDate ? att.sessionDate + ' • ' : '') + (att.sessionTitle || 'Séance');
+      document.getElementById('edit-att-status').value = att.status || 'PRESENT';
+      document.getElementById('edit-att-notes').value = att.notes || '';
+      document.getElementById('modal-edit-attendance').classList.add('active');
+    }
+
+    async function submitCreateAttendance(e) {
+      e.preventDefault();
+      var btn = document.getElementById('btn-submit-create-att');
+      btn.disabled = true;
+      btn.innerText = 'Enregistrement...';
+
+      var payload = {
+        sessionId: document.getElementById('create-att-sessionId').value,
+        athleteId: document.getElementById('create-att-athleteId').value,
+        status: document.getElementById('create-att-status').value,
+        notes: document.getElementById('create-att-notes').value.trim() || undefined
+      };
+
+      try {
+        var res = await fetch('/api/attendance/mark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (data.success) {
+          localStorage.setItem('ascos_active_tab', 'tab-attendances');
+          alert('✅ ' + (data.message || 'Présence enregistrée avec succès !'));
+          window.location.reload();
+        } else {
+          alert('❌ Erreur : ' + (data.message || "Impossible d'enregistrer la présence"));
+        }
+      } catch(err) {
+        alert('❌ Erreur réseau : ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Enregistrer la Présence';
+      }
+    }
+
+    async function submitEditAttendance(e) {
+      e.preventDefault();
+      var id = document.getElementById('edit-att-id').value;
+      var btn = document.getElementById('btn-submit-edit-att');
+      btn.disabled = true;
+      btn.innerText = 'Enregistrement...';
+
+      var payload = {
+        status: document.getElementById('edit-att-status').value,
+        notes: document.getElementById('edit-att-notes').value.trim() || ''
+      };
+
+      try {
+        var res = await fetch('/api/attendance/' + encodeURIComponent(id), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (data.success) {
+          localStorage.setItem('ascos_active_tab', 'tab-attendances');
+          alert('✅ Pointage mis à jour avec succès !');
+          window.location.reload();
+        } else {
+          alert('❌ Erreur : ' + (data.message || 'Impossible de mettre à jour le pointage'));
+        }
+      } catch(err) {
+        alert('❌ Erreur réseau : ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Enregistrer les Modifications';
+      }
+    }
+
+    async function handleDeleteAttendance(id, athleteName) {
+      if (!confirm('⚠️ Voulez-vous vraiment supprimer ce pointage pour ' + athleteName + ' ?')) return;
+      try {
+        var res = await fetch('/api/attendance/' + encodeURIComponent(id), { method: 'DELETE' });
+        var data = await res.json();
+        if (data.success) {
+          localStorage.setItem('ascos_active_tab', 'tab-attendances');
+          alert('✅ ' + data.message);
+          window.location.reload();
+        } else {
+          alert('❌ Erreur : ' + (data.message || 'Impossible de supprimer le pointage'));
         }
       } catch(err) {
         alert('❌ Erreur réseau : ' + err.message);
@@ -1719,8 +2098,8 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
 
       var payload = {
         name: document.getElementById('edit-grp-name').value.trim(),
-        description: document.getElementById('edit-grp-description').value.trim(),
-        coachId: document.getElementById('edit-grp-coachId').value || undefined
+        description: document.getElementById('create-grp-description').value.trim(),
+        coachId: document.getElementById('create-grp-coachId').value || undefined
       };
 
       try {
@@ -1992,4 +2371,5 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
 
   return res.send(html);
 };
+
 

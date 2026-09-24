@@ -319,6 +319,39 @@ export const deleteAttendance = (req: Request, res: Response) => {
   }
 };
 
+// Mettre à jour un enregistrement de présence existant
+export const updateAttendance = (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+
+    const record = dbStore.attendances.find((a) => a.id === id);
+    if (!record) {
+      return res.status(404).json({ success: false, message: 'Enregistrement de présence introuvable' });
+    }
+
+    if (status) {
+      const validStatuses = ['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ success: false, message: 'Statut invalide' });
+      }
+      record.status = status;
+    }
+
+    if (notes !== undefined) {
+      record.notes = notes;
+    }
+
+    record.updatedAt = new Date().toISOString();
+    recalculateAthleteAttendance(record.athleteId);
+    dbStore.saveToFile();
+
+    return res.json({ success: true, data: record, message: 'Présence mise à jour avec succès' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 function recalculateAthleteAttendance(athleteId: string) {
   const athlete = dbStore.athletes.find((a) => a.id === athleteId);
   if (!athlete) return;

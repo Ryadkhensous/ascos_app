@@ -26,6 +26,7 @@ import {
   getAttendanceHistory,
   exportAttendanceCsv,
   deleteAttendance,
+  updateAttendance,
 } from '../controllers/attendance.controller';
 import {
   recordTime,
@@ -131,6 +132,7 @@ router.get('/attendance/session/:sessionId', getSessionAttendance);
 router.get('/attendance/stats', getAttendanceStats);
 router.get('/attendance/history', getAttendanceHistory);
 router.get('/attendance/export/csv', exportAttendanceCsv);
+router.put('/attendance/:id', updateAttendance);
 router.delete('/attendance/:id', deleteAttendance);
 
 // ==========================================
