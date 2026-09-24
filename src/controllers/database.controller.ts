@@ -65,6 +65,40 @@ export const downloadDatabaseBackup = (_req: Request, res: Response) => {
   }
 };
 
+// Permet de restaurer la base de données à partir d'un fichier de sauvegarde JSON
+export const restoreDatabaseBackup = (req: Request, res: Response) => {
+  try {
+    const payload = req.body;
+    const db = payload.database || payload.data || payload;
+
+    if (Array.isArray(db.athletes)) dbStore.athletes = db.athletes;
+    if (Array.isArray(db.sessions)) dbStore.sessions = db.sessions;
+    if (Array.isArray(db.attendances)) dbStore.attendances = db.attendances;
+    if (Array.isArray(db.swimmingTimes)) dbStore.swimmingTimes = db.swimmingTimes;
+    if (Array.isArray(db.groups) && db.groups.length > 0) dbStore.groups = db.groups;
+    if (Array.isArray(db.users) && db.users.length > 0) {
+      const existingAdmins = dbStore.users.filter((u) => u.role === 'ADMIN');
+      dbStore.users = db.users;
+      // S'assurer de conserver au moins un compte admin
+      for (const admin of existingAdmins) {
+        if (!dbStore.users.some((u) => u.id === admin.id || u.email === admin.email)) {
+          dbStore.users.unshift(admin);
+        }
+      }
+    }
+
+    dbStore.saveToFile();
+    console.log(`📥 Base de données restaurée avec succès (${dbStore.athletes.length} athlètes, ${dbStore.sessions.length} séances).`);
+
+    return res.json({
+      success: true,
+      message: `Sauvegarde restaurée avec succès ! (${dbStore.athletes.length} athlètes, ${dbStore.sessions.length} séances, ${dbStore.users.length} comptes)`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Erreur lors de la restauration : ' + error.message });
+  }
+};
+
 // Réinitialiser la base de données à zéro en préservant impérativement les comptes ADMIN
 export const resetDatabase = (_req: Request, res: Response) => {
   try {
@@ -253,6 +287,8 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       </div>
       <div class="actions">
         <a href="/api/database/backup.json" class="btn btn-primary" download>📥 Télécharger la Sauvegarde (.json)</a>
+        <input type="file" id="file-restore" accept=".json" style="display:none;" onchange="handleRestoreFile(event)">
+        <button class="btn btn-secondary" onclick="document.getElementById('file-restore').click()">📤 Restaurer (.json)</button>
         <a href="/api/database/dump" class="btn btn-secondary" target="_blank">🔍 Voir JSON Brut</a>
         <button onclick="handleResetDb()" class="btn btn-danger">⚠️ Réinitialiser la BD à 0</button>
       </div>
@@ -837,6 +873,41 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
       } catch (err) {
         alert("❌ Erreur de connexion avec le serveur : " + err.message);
       }
+    }
+
+    async function handleRestoreFile(evt) {
+      const file = evt.target.files && evt.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const content = JSON.parse(e.target.result);
+          const confirmRestore = confirm("⚠️ Voulez-vous vraiment restaurer les données à partir de ce fichier de sauvegarde ?\\n\\nCela va mettre à jour la base avec les éléments contenus dans le fichier.");
+          if (!confirmRestore) {
+            evt.target.value = '';
+            return;
+          }
+
+          const res = await fetch('/api/database/restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(content)
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert("✅ " + data.message);
+            window.location.reload();
+          } else {
+            alert("❌ Erreur : " + (data.message || 'Impossible de restaurer la base'));
+          }
+        } catch(err) {
+          alert("❌ Fichier JSON invalide : " + err.message);
+        } finally {
+          evt.target.value = '';
+        }
+      };
+      reader.readAsText(file);
     }
   </script>
 </body>
