@@ -224,6 +224,7 @@ export class AscosStore {
 
         this.isPgConnected = true;
         this.pgStatusText = 'Base PostgreSQL Cloud Connectée & Active (Persistance 100%)';
+        this.startKeepAlive();
       } finally {
         client.release();
       }
@@ -232,6 +233,23 @@ export class AscosStore {
       this.isPgConnected = false;
       this.pgStatusText = 'Mode Fichier Local (JSON)';
     }
+  }
+
+  private keepAliveInterval: NodeJS.Timeout | null = null;
+
+  // Empêche Neon de passer en veille en envoyant un ping léger toutes les 4 minutes
+  private startKeepAlive(): void {
+    if (this.keepAliveInterval) clearInterval(this.keepAliveInterval);
+    this.keepAliveInterval = setInterval(async () => {
+      if (this.isPgConnected && this.pgPool) {
+        try {
+          await this.pgPool.query('SELECT 1;');
+          console.log('💓 [Keep-Alive] Ping PostgreSQL Neon réussi (veille évitée).');
+        } catch (err: any) {
+          console.warn('⚠️ [Keep-Alive] Ping Neon :', err.message);
+        }
+      }
+    }, 4 * 60 * 1000);
   }
 
   public saveToFile(): void {
