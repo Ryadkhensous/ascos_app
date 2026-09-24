@@ -212,7 +212,13 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     };
   });
 
-  const escapeQuote = (str: string) => (str || '').replace(/'/g, "\\'");
+  const escapeHtmlAttr = (str: string) =>
+    (str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -410,7 +416,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
                 <td style="text-align: right;">
                   <div class="actions-cell" style="justify-content: flex-end;">
                     <button class="action-btn action-btn-edit" onclick="openEditAthleteModal('${aB64}')">✏️ Modifier</button>
-                    <button class="action-btn action-btn-delete" onclick="handleDeleteAthlete('${a.id}', '${escapeQuote(a.firstName)} ${escapeQuote(a.lastName)}')">🗑️ Supprimer</button>
+                    <button class="action-btn action-btn-delete" data-id="${a.id}" data-name="${escapeHtmlAttr(a.firstName + ' ' + a.lastName)}" onclick="handleDeleteAthlete(this.getAttribute('data-id'), this.getAttribute('data-name'))">🗑️ Supprimer</button>
                   </div>
                 </td>
               </tr>`;
@@ -469,7 +475,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
                 <td style="text-align: right;">
                   <div class="actions-cell" style="justify-content: flex-end;">
                     <button class="action-btn action-btn-edit" onclick="openEditSessionModal('${sB64}')">✏️ Modifier</button>
-                    <button class="action-btn action-btn-delete" onclick="handleDeleteSession('${s.id}', '${escapeQuote(s.title)}')">🗑️ Supprimer</button>
+                    <button class="action-btn action-btn-delete" data-id="${s.id}" data-title="${escapeHtmlAttr(s.title)}" onclick="handleDeleteSession(this.getAttribute('data-id'), this.getAttribute('data-title'))">🗑️ Supprimer</button>
                   </div>
                 </td>
               </tr>`;
@@ -534,7 +540,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
                 <td style="text-align: right;">
                   <div class="actions-cell" style="justify-content: flex-end;">
                     <button class="action-btn action-btn-edit" onclick="openEditAttendanceModal('${attB64}')">✏️ Modifier</button>
-                    <button class="action-btn action-btn-delete" onclick="handleDeleteAttendance('${att.id}', '${escapeQuote(att.athleteName)}')">🗑️ Supprimer</button>
+                    <button class="action-btn action-btn-delete" data-id="${att.id}" data-name="${escapeHtmlAttr(att.athleteName)}" onclick="handleDeleteAttendance(this.getAttribute('data-id'), this.getAttribute('data-name'))">🗑️ Supprimer</button>
                   </div>
                 </td>
               </tr>`;
@@ -590,7 +596,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
                 <td style="text-align: right;">
                   <div class="actions-cell" style="justify-content: flex-end;">
                     <button class="action-btn action-btn-edit" onclick="openEditTimeModal('${tB64}')">✏️ Modifier</button>
-                    <button class="action-btn action-btn-delete" onclick="handleDeleteTime('${t.id}', '${escapeQuote(t.athleteName)}')">🗑️ Supprimer</button>
+                    <button class="action-btn action-btn-delete" data-id="${t.id}" data-name="${escapeHtmlAttr(t.athleteName)}" onclick="handleDeleteTime(this.getAttribute('data-id'), this.getAttribute('data-name'))">🗑️ Supprimer</button>
                   </div>
                 </td>
               </tr>`;
@@ -640,7 +646,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
                 <td style="text-align: right;">
                   <div class="actions-cell" style="justify-content: flex-end;">
                     <button class="action-btn action-btn-edit" onclick="openEditGroupModal('${gB64}')">✏️ Modifier</button>
-                    <button class="action-btn action-btn-delete" onclick="handleDeleteGroup('${g.id}', '${escapeQuote(g.name)}')">🗑️ Supprimer</button>
+                    <button class="action-btn action-btn-delete" data-id="${g.id}" data-name="${escapeHtmlAttr(g.name)}" onclick="handleDeleteGroup(this.getAttribute('data-id'), this.getAttribute('data-name'))">🗑️ Supprimer</button>
                   </div>
                 </td>
               </tr>`;
@@ -694,7 +700,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
             <td style="text-align: right;">
               <div class="actions-cell" style="justify-content: flex-end;">
                 <button class="action-btn action-btn-edit" onclick="openEditUserModal('${uB64}')">✏️ Modifier</button>
-                <button class="action-btn action-btn-delete" onclick="handleDeleteUser('${u.id}', '${escapeQuote(u.firstName)} ${escapeQuote(u.lastName)}', '${u.role}')" ${isLastAdmin ? 'disabled title="Dernier compte administrateur non supprimable"' : ''}>🗑️ Supprimer</button>
+                <button class="action-btn action-btn-delete" data-id="${u.id}" data-name="${escapeHtmlAttr(u.firstName + ' ' + u.lastName)}" data-role="${escapeHtmlAttr(u.role)}" onclick="handleDeleteUser(this.getAttribute('data-id'), this.getAttribute('data-name'), this.getAttribute('data-role'))" ${isLastAdmin ? 'disabled title="Dernier compte administrateur non supprimable"' : ''}>🗑️ Supprimer</button>
               </div>
             </td>
           </tr>`;
@@ -1701,7 +1707,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
         startTime: document.getElementById('create-sess-startTime').value,
         endTime: document.getElementById('create-sess-endTime').value,
         poolType: document.getElementById('create-sess-poolType').value,
-        location: document.getElementById('create-sess-location').value.trim() || 'Bassin d\'entraînement',
+        location: document.getElementById('create-sess-location').value.trim() || "Bassin d'entraînement",
         focus: document.getElementById('create-sess-focus').value.trim() || 'Général'
       };
 
@@ -1741,7 +1747,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
         startTime: document.getElementById('edit-sess-startTime').value,
         endTime: document.getElementById('edit-sess-endTime').value,
         poolType: document.getElementById('edit-sess-poolType').value,
-        location: document.getElementById('edit-sess-location').value.trim() || 'Bassin d\'entraînement',
+        location: document.getElementById('edit-sess-location').value.trim() || "Bassin d'entraînement",
         focus: document.getElementById('edit-sess-focus').value.trim() || 'Général'
       };
 
@@ -1768,7 +1774,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     }
 
     async function handleDeleteSession(id, title) {
-      if (!confirm('⚠️ Voulez-vous vraiment supprimer la séance "' + title + '" ?\\n\\nLes pointages et feuilles d\'appel associés seront également supprimés.')) return;
+      if (!confirm("⚠️ Voulez-vous vraiment supprimer la séance '" + title + "' ?\\n\\nLes pointages et feuilles d'appel associés seront également supprimés.")) return;
       try {
         var res = await fetch('/api/sessions/' + encodeURIComponent(id), { method: 'DELETE' });
         var data = await res.json();
@@ -1785,7 +1791,7 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
     }
 
     async function handleGenerateDailySessions() {
-      if (!confirm('⚡ Souhaitez-vous générer automatiquement le planning type des séances pour aujourd\'hui ?')) return;
+      if (!confirm("⚡ Souhaitez-vous générer automatiquement le planning type des séances pour aujourd'hui ?")) return;
       try {
         var res = await fetch('/api/sessions/generate-daily', { method: 'POST' });
         var data = await res.json();
