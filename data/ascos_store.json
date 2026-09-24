@@ -9,24 +9,24 @@
       "username": "admin",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "firstName": "Administrateur",
-      "updatedAt": "2026-01-01T00:00:00.000Z",
-      "passwordHash": "$2a$10$UwI7S1UeFWfIFc2ObbEy7eOP14J.txnNDmDIgBJndesbrGtnRoReq",
+      "updatedAt": "2026-09-24T18:15:42.701Z",
+      "passwordHash": "$2a$10$EP0W9oXNwoj/yNwjBparOu6wtgVIAz.Y3piW5FPUCyOfrhY3lSVaO",
       "assignedGroup": "Tous les groupes",
       "assignedGroups": [
         "Tous les groupes"
       ]
     },
     {
-      "id": "user-1790199580896",
+      "id": "user-1790273833306",
       "role": "COACH",
-      "email": "coach_florent@ascos.fr",
+      "email": "anes@ascos.fr",
       "phone": "",
-      "lastName": "Manaudou",
-      "username": "coach_florent",
-      "createdAt": "2026-09-23T21:39:40.896Z",
-      "firstName": "Florent",
-      "updatedAt": "2026-09-23T21:39:40.896Z",
-      "passwordHash": "$2a$10$88SBYCnTYOzmoP6bEJFyt.uqHHi1DMBr4jAVvTnm7d6IsVLAlOnHu",
+      "lastName": "ascos",
+      "username": "anes",
+      "createdAt": "2026-09-24T18:17:13.306Z",
+      "firstName": "anes",
+      "updatedAt": "2026-09-24T18:17:13.306Z",
+      "passwordHash": "$2a$10$XgVVziWiNQ0CPg6sMP98HO7fRiEXRHjTpQOdtI./UnMrStKj0KboG",
       "assignedGroup": "Groupe Élite",
       "assignedGroups": [
         "Groupe Élite"
@@ -65,17 +65,19 @@
   ],
   "athletes": [
     {
-      "id": "ath-1790199576667-857",
+      "id": "ath-1790273988355-954",
       "gender": "MALE",
-      "category": "Séniors & Maîtres (19+ ans)",
-      "lastName": "Marchand",
-      "firstName": "Léon",
+      "category": "Juniors (15-18 ans)",
+      "lastName": "test",
+      "coachName": "anes ascos",
+      "firstName": "test",
       "groupName": "Groupe Élite",
-      "dateOfBirth": "2002-05-17",
-      "licenseNumber": "FFN-971811",
-      "totalSessions": 0,
-      "attendanceRate": 100,
-      "attendedSessions": 0
+      "dateOfBirth": "2010-01-01",
+      "licenseNumber": "FFN-404160",
+      "totalSessions": 1,
+      "attendanceRate": 0,
+      "attendedSessions": 0,
+      "emergencyContact": ""
     }
   ],
   "sessions": [
@@ -133,8 +135,99 @@
       "poolType": "POOL_25M",
       "groupName": "École de Natation",
       "startTime": "16:30"
+    },
+    {
+      "id": "sess-2026-09-24-tous-les-groupes-7552",
+      "date": "2026-09-24",
+      "focus": "Échauffement & Aérobie",
+      "title": "Séance Commune Club",
+      "endTime": "19:30",
+      "location": "Bassin d'entraînement (25m)",
+      "poolType": "POOL_25M",
+      "groupName": "Tous les groupes",
+      "startTime": "18:00"
+    },
+    {
+      "id": "sess-2026-09-24-groupe-elite-6933",
+      "date": "2026-09-24",
+      "focus": "Cadences & Chronos Officiels",
+      "title": "Aérobie & Vitesse Compétition",
+      "endTime": "20:00",
+      "location": "Bassin Olympique (50m)",
+      "poolType": "POOL_50M",
+      "groupName": "Groupe Élite",
+      "startTime": "18:00"
+    },
+    {
+      "id": "sess-2026-09-24-groupe-performance-7941",
+      "date": "2026-09-24",
+      "focus": "Coulées, Virages & Départs",
+      "title": "Technique 4 Nages & Virages",
+      "endTime": "20:30",
+      "location": "Bassin d'entraînement (25m)",
+      "poolType": "POOL_25M",
+      "groupName": "Groupe Performance",
+      "startTime": "19:00"
+    },
+    {
+      "id": "sess-2026-09-24-groupe-espoirs-3377",
+      "date": "2026-09-24",
+      "focus": "Technique de nage & endurance",
+      "title": "Perfectionnement Nage Libre & Dos",
+      "endTime": "19:00",
+      "location": "Bassin d'entraînement (25m)",
+      "poolType": "POOL_25M",
+      "groupName": "Groupe Espoirs",
+      "startTime": "17:30"
+    },
+    {
+      "id": "sess-2026-09-24-ecole-de-natation-1453",
+      "date": "2026-09-24",
+      "focus": "Flottaison, Propulsion & Respiration",
+      "title": "Apprentissage & Sécurité Aquatique",
+      "endTime": "17:30",
+      "location": "Petit Bassin d'apprentissage",
+      "poolType": "POOL_25M",
+      "groupName": "École de Natation",
+      "startTime": "16:30"
     }
   ],
-  "attendances": [],
-  "swimmingTimes": []
+  "attendances": [
+    {
+      "id": "att-1790274003072-71ql",
+      "notes": "",
+      "status": "ABSENT",
+      "athleteId": "ath-1790273988355-954",
+      "sessionId": "sess-2026-09-24-tous-les-groupes-7552",
+      "updatedAt": "2026-09-24T18:21:00.486Z"
+    }
+  ],
+  "swimmingTimes": [
+    {
+      "id": "t-1790274140554",
+      "date": "2026-09-24",
+      "notes": null,
+      "stroke": "FREESTYLE",
+      "distance": 50,
+      "poolType": "POOL_50M",
+      "timeInMs": 25500,
+      "athleteId": "ath-1790273988355-954",
+      "athleteName": "test test",
+      "competition": "Championnat Régional",
+      "isPersonalBest": false
+    },
+    {
+      "id": "t-1790274139297",
+      "date": "2026-09-24",
+      "notes": null,
+      "stroke": "FREESTYLE",
+      "distance": 50,
+      "poolType": "POOL_50M",
+      "timeInMs": 25500,
+      "athleteId": "ath-1790273988355-954",
+      "athleteName": "test test",
+      "competition": "Championnat Régional",
+      "isPersonalBest": true
+    }
+  ]
 }
