@@ -103,6 +103,9 @@ export interface TrainingGroupData {
   updatedAt: string;
 }
 
+export const NEON_DEFAULT_URL =
+  'postgresql://neondb_owner:npg_4CyzUlDJjEp8@ep-summer-silence-b1pqdu1w-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require';
+
 // Données réalistes par défaut pour le club de natation ASCOS
 export class AscosStore {
   public users: UserData[] = [
@@ -169,18 +172,17 @@ export class AscosStore {
   }
 
   public async initPostgres(): Promise<void> {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl || !dbUrl.startsWith('postgres')) {
-      this.isPgConnected = false;
-      this.pgStatusText = 'Mode Stockage Fichier Local (JSON)';
-      return;
+    let dbUrl = process.env.DATABASE_URL;
+    // Utiliser la base Neon Cloud permanente par défaut même si DATABASE_URL n'est pas encore ajoutée sur Render
+    if (!dbUrl || dbUrl.includes('localhost') || !dbUrl.startsWith('postgres')) {
+      dbUrl = NEON_DEFAULT_URL;
     }
 
     try {
       this.pgPool = new Pool({
         connectionString: dbUrl,
-        ssl: dbUrl.includes('localhost') ? false : { rejectUnauthorized: false },
-        connectionTimeoutMillis: 5000,
+        ssl: { rejectUnauthorized: false },
+        connectionTimeoutMillis: 7000,
       });
 
       const client = await this.pgPool.connect();
