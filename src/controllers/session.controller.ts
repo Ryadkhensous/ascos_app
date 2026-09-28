@@ -174,10 +174,31 @@ export const getSessionById = (req: Request, res: Response) => {
           g === 'general'
       );
 
+    const { coachGroups, groups } = req.query;
+    const coachGroupsFilter: string[] = [];
+    if (coachGroups) {
+      const parsed = Array.isArray(coachGroups) ? coachGroups : String(coachGroups).split(',');
+      coachGroupsFilter.push(
+        ...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes')
+      );
+    } else if (groups) {
+      const parsed = Array.isArray(groups) ? groups : String(groups).split(',');
+      coachGroupsFilter.push(
+        ...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes')
+      );
+    }
+
     // Récupérer les athlètes faisant partie d'un des groupes de la séance ou tous si "Tous les groupes"
-    const groupAthletes = isAllGroups
+    let groupAthletes = isAllGroups
       ? dbStore.athletes
       : dbStore.athletes.filter((a) => sessionGroups.includes(normalizeStr(a.groupName)));
+
+    // Si un entraîneur a des groupes assignés spécifiques, ne lui afficher QUE ses groupes
+    if (coachGroupsFilter.length > 0) {
+      groupAthletes = groupAthletes.filter((a) =>
+        coachGroupsFilter.some((cg) => normalizeStr(cg) === normalizeStr(a.groupName))
+      );
+    }
 
     // Récupérer les présences déjà enregistrées pour cette séance
     const attendances = dbStore.attendances.filter((att) => att.sessionId === id);
@@ -187,11 +208,19 @@ export const getSessionById = (req: Request, res: Response) => {
     for (const a of groupAthletes) {
       athleteMap.set(a.id, a);
     }
-    // Inclure aussi tout athlète ayant déjà un pointage sur cette séance
+    // Inclure aussi tout athlète ayant déjà un pointage sur cette séance (sauf si filtré par coachGroups)
     for (const att of attendances) {
       if (!athleteMap.has(att.athleteId)) {
         const found = dbStore.athletes.find((a) => a.id === att.athleteId);
-        if (found) athleteMap.set(found.id, found);
+        if (found) {
+          if (
+            coachGroupsFilter.length > 0 &&
+            !coachGroupsFilter.some((cg) => normalizeStr(cg) === normalizeStr(found.groupName))
+          ) {
+            continue;
+          }
+          athleteMap.set(found.id, found);
+        }
       }
     }
 

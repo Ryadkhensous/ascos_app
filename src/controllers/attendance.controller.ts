@@ -123,15 +123,38 @@ export const saveBatchAttendance = (req: Request, res: Response) => {
 // Récupérer l'historique complet des présences par date / séance
 export const getAttendanceHistory = (req: Request, res: Response) => {
   try {
-    const { groupName, startDate, endDate } = req.query;
+    const { groupName, coachGroups, groups, startDate, endDate } = req.query;
+
+    const coachGroupsFilter: string[] = [];
+    if (coachGroups) {
+      const parsed = Array.isArray(coachGroups) ? coachGroups : String(coachGroups).split(',');
+      coachGroupsFilter.push(
+        ...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes')
+      );
+    } else if (groups) {
+      const parsed = Array.isArray(groups) ? groups : String(groups).split(',');
+      coachGroupsFilter.push(
+        ...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes')
+      );
+    }
 
     let sessions = [...dbStore.sessions];
-    if (groupName && groupName !== 'Tous' && groupName !== 'Tous les groupes') {
+
+    // Si coachGroups est spécifié, ne garder que les séances concernant les groupes du coach
+    if (coachGroupsFilter.length > 0) {
+      sessions = sessions.filter((s) => {
+        if (isAllGroupsMatch(s.groupName)) return true;
+        const sGroups = getSessionGroups(s.groupName);
+        return coachGroupsFilter.some((cg) => sGroups.includes(normalizeStr(cg)));
+      });
+    }
+
+    if (groupName && groupName !== 'Tous' && groupName !== 'Tous les groupes' && groupName !== 'Tous mes groupes') {
       const normQuery = normalizeStr(String(groupName));
       sessions = sessions.filter((s) => {
         if (isAllGroupsMatch(s.groupName)) return true;
-        const groups = getSessionGroups(s.groupName);
-        return groups.includes(normQuery);
+        const sGroups = getSessionGroups(s.groupName);
+        return sGroups.includes(normQuery);
       });
     }
     if (startDate) {
@@ -145,7 +168,14 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
 
     const history = sessions.map((sess) => {
       const records = dbStore.attendances.filter((att) => att.sessionId === sess.id);
-      const groupAthletes = getAthletesForSession(sess.groupName);
+      let groupAthletes = getAthletesForSession(sess.groupName);
+
+      // Si un entraîneur avec groupes assignés consulte, restreindre aux nageurs de ses groupes
+      if (coachGroupsFilter.length > 0) {
+        groupAthletes = groupAthletes.filter((a) =>
+          coachGroupsFilter.some((cg) => normalizeStr(cg) === normalizeStr(a.groupName))
+        );
+      }
 
       const list = groupAthletes.map((ath) => {
         const rec = records.find((r) => r.athleteId === ath.id);
@@ -153,6 +183,7 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
           athleteId: ath.id,
           athleteName: `${ath.firstName} ${ath.lastName}`,
           category: ath.category,
+          groupName: ath.groupName,
           status: rec ? rec.status : 'PRESENT',
           notes: rec ? rec.notes || '' : '',
         };
@@ -271,7 +302,26 @@ export const getSessionAttendance = (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Séance introuvable' });
     }
 
-    const groupAthletes = getAthletesForSession(session.groupName);
+    const { coachGroups, groups } = req.query;
+    const coachGroupsFilter: string[] = [];
+    if (coachGroups) {
+      const parsed = Array.isArray(coachGroups) ? coachGroups : String(coachGroups).split(',');
+      coachGroupsFilter.push(
+        ...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes')
+      );
+    } else if (groups) {
+      const parsed = Array.isArray(groups) ? groups : String(groups).split(',');
+      coachGroupsFilter.push(
+        ...parsed.map((g: any) => String(g).trim()).filter((g: string) => g && g !== 'Tous' && g !== 'Tous les groupes')
+      );
+    }
+
+    let groupAthletes = getAthletesForSession(session.groupName);
+    if (coachGroupsFilter.length > 0) {
+      groupAthletes = groupAthletes.filter((a) =>
+        coachGroupsFilter.some((cg) => normalizeStr(cg) === normalizeStr(a.groupName))
+      );
+    }
     const existingRecords = dbStore.attendances.filter((a) => a.sessionId === sessionId);
 
     const sheet = groupAthletes.map((ath) => {
