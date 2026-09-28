@@ -10,6 +10,7 @@ import {
   updateAthlete,
   deleteAthlete,
   clearAllAthletes,
+  recalculateAllBirthDates,
 } from '../controllers/athlete.controller';
 import {
   getSessions,
@@ -108,6 +109,7 @@ router.get('/athletes', getAthletes);
 router.get('/athletes/template-excel', getExcelTemplate);
 router.post('/athletes/import-excel', importExcelAthletes);
 router.post('/athletes/assign-batch', assignAthletesBatch);
+router.post('/athletes/recalculate-dob', recalculateAllBirthDates);
 router.post('/athletes/batch', createAthletesBatch);
 router.delete('/athletes/all', clearAllAthletes);
 router.get('/athletes/:id', getAthleteById);
