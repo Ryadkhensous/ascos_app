@@ -226,8 +226,21 @@ export const getAthletes = (req: Request, res: Response) => {
       list = list.filter((a) => a.coachId === String(coachId));
     }
 
-    if (group && group !== 'Tous') {
-      list = list.filter((a) => a.groupName === group);
+    if (group && group !== 'Tous' && group !== 'Tous mes groupes') {
+      const gClean = String(group).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (gClean.includes('non assign') || gClean.includes('sans groupe') || gClean === 'unassigned') {
+        list = list.filter(
+          (a) =>
+            !a.groupName ||
+            a.groupName === 'Non assigné' ||
+            a.groupName === 'Non assignés' ||
+            a.groupName === 'Sans groupe' ||
+            !a.coachName ||
+            a.coachName.trim() === ''
+        );
+      } else {
+        list = list.filter((a) => a.groupName.toLowerCase() === String(group).toLowerCase());
+      }
     }
 
     if (category && category !== 'Toutes') {
