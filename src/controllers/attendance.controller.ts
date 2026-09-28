@@ -36,18 +36,49 @@ const getAthletesForSession = (sessionGroupName?: string) => {
   return dbStore.athletes.filter((a) => groups.includes(normalizeStr(a.groupName)));
 };
 
+// Calculer les minutes effectives d'entraînement restantes pour un athlète en retard
+export function computeEffectiveMinutes(startTime: string, endTime: string, arrivalTime: string): number {
+  try {
+    const [startH, startM] = (startTime || '18:00').split(':').map(Number);
+    const [endH, endM] = (endTime || '19:30').split(':').map(Number);
+    const [arrH, arrM] = (arrivalTime || '18:00').split(':').map(Number);
+    if (isNaN(startH) || isNaN(endH) || isNaN(arrH)) return 0;
+    const startMin = startH * 60 + (startM || 0);
+    const endMin = endH * 60 + (endM || 0);
+    const arrMin = arrH * 60 + (arrM || 0);
+    const totalSessionMin = endMin >= startMin ? endMin - startMin : (24 * 60 - startMin + endMin);
+
+    if (arrMin <= startMin) return totalSessionMin;
+    if (arrMin >= endMin) return 0;
+    return Math.max(0, endMin - arrMin);
+  } catch (_) {
+    return 0;
+  }
+}
+
 // Enregistrer ou mettre à jour la présence d'un athlète à une séance
 export const markAttendance = (req: Request, res: Response) => {
   try {
-    const { sessionId, athleteId, status, notes } = req.body;
+    const { sessionId, athleteId, status, notes, arrivalTime, effectiveDurationMinutes } = req.body;
 
     if (!sessionId || !athleteId || !status) {
       return res.status(400).json({ success: false, message: 'sessionId, athleteId et status requis' });
     }
 
-    const validStatuses = ['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Statut invalide' });
+    const validStatuses = ['PRESENT', 'ABSENT', 'LATE'];
+    const cleanStatus = status === 'EXCUSED' ? 'ABSENT' : status;
+    if (!validStatuses.includes(cleanStatus)) {
+      return res.status(400).json({ success: false, message: 'Statut invalide (PRESENT, ABSENT, LATE)' });
+    }
+
+    const session = dbStore.sessions.find((s) => s.id === sessionId);
+    let computedDuration = effectiveDurationMinutes;
+    if (cleanStatus === 'LATE' && arrivalTime && session) {
+      if (computedDuration === undefined) {
+        computedDuration = computeEffectiveMinutes(session.startTime, session.endTime, arrivalTime);
+      }
+    } else if (cleanStatus !== 'LATE') {
+      computedDuration = undefined;
     }
 
     const index = dbStore.attendances.findIndex(
@@ -55,15 +86,19 @@ export const markAttendance = (req: Request, res: Response) => {
     );
 
     if (index !== -1) {
-      dbStore.attendances[index].status = status;
+      dbStore.attendances[index].status = cleanStatus;
       if (notes !== undefined) dbStore.attendances[index].notes = notes;
+      dbStore.attendances[index].arrivalTime = cleanStatus === 'LATE' ? arrivalTime : undefined;
+      dbStore.attendances[index].effectiveDurationMinutes = cleanStatus === 'LATE' ? computedDuration : undefined;
       dbStore.attendances[index].updatedAt = new Date().toISOString();
     } else {
       const newRecord: AttendanceData = {
         id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         sessionId,
         athleteId,
-        status,
+        status: cleanStatus,
+        arrivalTime: cleanStatus === 'LATE' ? arrivalTime : undefined,
+        effectiveDurationMinutes: cleanStatus === 'LATE' ? computedDuration : undefined,
         notes,
         updatedAt: new Date().toISOString(),
       };
@@ -89,22 +124,39 @@ export const saveBatchAttendance = (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'sessionId et tableau records requis' });
     }
 
+    const session = dbStore.sessions.find((s) => s.id === sessionId);
+    const validStatuses = ['PRESENT', 'ABSENT', 'LATE'];
+
     for (const item of records) {
-      const { athleteId, status, notes } = item;
+      const { athleteId, status, notes, arrivalTime, effectiveDurationMinutes } = item;
+      const cleanStatus = status === 'EXCUSED' ? 'ABSENT' : status;
+      if (!validStatuses.includes(cleanStatus)) continue;
+
+      let computedDuration = effectiveDurationMinutes;
+      if (cleanStatus === 'LATE' && arrivalTime && session && computedDuration === undefined) {
+        computedDuration = computeEffectiveMinutes(session.startTime, session.endTime, arrivalTime);
+      } else if (cleanStatus !== 'LATE') {
+        computedDuration = undefined;
+      }
+
       const index = dbStore.attendances.findIndex(
         (a) => a.sessionId === sessionId && a.athleteId === athleteId
       );
 
       if (index !== -1) {
-        dbStore.attendances[index].status = status;
+        dbStore.attendances[index].status = cleanStatus;
         if (notes !== undefined) dbStore.attendances[index].notes = notes;
+        dbStore.attendances[index].arrivalTime = cleanStatus === 'LATE' ? arrivalTime : undefined;
+        dbStore.attendances[index].effectiveDurationMinutes = cleanStatus === 'LATE' ? computedDuration : undefined;
         dbStore.attendances[index].updatedAt = new Date().toISOString();
       } else {
         dbStore.attendances.push({
           id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           sessionId,
           athleteId,
-          status,
+          status: cleanStatus,
+          arrivalTime: cleanStatus === 'LATE' ? arrivalTime : undefined,
+          effectiveDurationMinutes: cleanStatus === 'LATE' ? computedDuration : undefined,
           notes,
           updatedAt: new Date().toISOString(),
         });
@@ -179,12 +231,15 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
 
       const list = groupAthletes.map((ath) => {
         const rec = records.find((r) => r.athleteId === ath.id);
+        const status = rec ? rec.status : 'PRESENT';
         return {
           athleteId: ath.id,
           athleteName: `${ath.firstName} ${ath.lastName}`,
           category: ath.category,
           groupName: ath.groupName,
-          status: rec ? rec.status : 'PRESENT',
+          status,
+          arrivalTime: status === 'LATE' ? rec?.arrivalTime : undefined,
+          effectiveDurationMinutes: status === 'LATE' ? rec?.effectiveDurationMinutes : undefined,
           notes: rec ? rec.notes || '' : '',
         };
       });
@@ -192,7 +247,6 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
       const present = list.filter((i) => i.status === 'PRESENT').length;
       const late = list.filter((i) => i.status === 'LATE').length;
       const absent = list.filter((i) => i.status === 'ABSENT').length;
-      const excused = list.filter((i) => i.status === 'EXCUSED').length;
       const total = list.length;
       const rate = total > 0 ? Math.round(((present + late) / total) * 1000) / 10 : 100.0;
 
@@ -203,7 +257,7 @@ export const getAttendanceHistory = (req: Request, res: Response) => {
           present,
           late,
           absent,
-          excused,
+          excused: 0,
           rate,
         },
         records: list,
@@ -223,7 +277,7 @@ export const exportAttendanceCsv = (req: Request, res: Response) => {
 
     const rows: string[] = [];
     rows.push('sep=;');
-    rows.push('Date;Séance;Groupe;Bassin;Nom Nageur;Prénom Nageur;Catégorie;Statut Présence;Remarques');
+    rows.push('Date;Séance;Groupe;Bassin;Nom Nageur;Prénom Nageur;Catégorie;Statut Présence;Heure Arrivée;Volume Effectif;Remarques');
 
     let sessionsToExport = dbStore.sessions;
     if (sessionId) {
@@ -238,20 +292,17 @@ export const exportAttendanceCsv = (req: Request, res: Response) => {
         const rec = records.find((r) => r.athleteId === ath.id);
         const status = rec ? rec.status : 'PRESENT';
         const notes = rec ? rec.notes || '' : '';
+        const arrivalTime = (status === 'LATE' && rec?.arrivalTime) ? rec.arrivalTime : '-';
+        const volumeStr = (status === 'LATE' && rec?.effectiveDurationMinutes !== undefined)
+          ? `${rec.effectiveDurationMinutes} min`
+          : (status === 'PRESENT' ? 'Complet' : '0 min');
 
-        const statusFr =
-          status === 'PRESENT'
-            ? 'Présent'
-            : status === 'LATE'
-            ? 'Retard'
-            : status === 'EXCUSED'
-            ? 'Excusé'
-            : 'Absent';
+        const statusFr = status === 'PRESENT' ? 'Présent' : status === 'LATE' ? 'Retard' : 'Absent';
 
         rows.push(
           `${sess.date};"${sess.title}";"${sess.groupName}";"${
             sess.poolType === 'POOL_50M' ? '50m' : '25m'
-          }";"${ath.lastName}";"${ath.firstName}";"${ath.category}";"${statusFr}";"${notes}"`
+          }";"${ath.lastName}";"${ath.firstName}";"${ath.category}";"${statusFr}";"${arrivalTime}";"${volumeStr}";"${notes}"`
         );
       }
     }
@@ -272,7 +323,7 @@ export const getAttendanceStats = (req: Request, res: Response) => {
     const presentCount = dbStore.attendances.filter((a) => a.status === 'PRESENT').length;
     const lateCount = dbStore.attendances.filter((a) => a.status === 'LATE').length;
     const absentCount = dbStore.attendances.filter((a) => a.status === 'ABSENT').length;
-    const excusedCount = dbStore.attendances.filter((a) => a.status === 'EXCUSED').length;
+    const excusedCount = 0;
 
     const globalRate = totalRecords > 0 ? ((presentCount + lateCount) / totalRecords) * 100 : 92.5;
 
@@ -326,12 +377,15 @@ export const getSessionAttendance = (req: Request, res: Response) => {
 
     const sheet = groupAthletes.map((ath) => {
       const rec = existingRecords.find((r) => r.athleteId === ath.id);
+      const status = rec ? rec.status : 'PRESENT';
       return {
         athleteId: ath.id,
         athleteName: `${ath.firstName} ${ath.lastName}`,
         category: ath.category,
         photoUrl: ath.photoUrl,
-        status: rec ? rec.status : 'PRESENT',
+        status,
+        arrivalTime: status === 'LATE' ? rec?.arrivalTime : undefined,
+        effectiveDurationMinutes: status === 'LATE' ? rec?.effectiveDurationMinutes : undefined,
         notes: rec ? rec.notes || '' : '',
       };
     });
@@ -373,7 +427,7 @@ export const deleteAttendance = (req: Request, res: Response) => {
 export const updateAttendance = (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, notes } = req.body;
+    const { status, notes, arrivalTime, effectiveDurationMinutes } = req.body;
 
     const record = dbStore.attendances.find((a) => a.id === id);
     if (!record) {
@@ -381,11 +435,24 @@ export const updateAttendance = (req: Request, res: Response) => {
     }
 
     if (status) {
-      const validStatuses = ['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'];
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ success: false, message: 'Statut invalide' });
+      const validStatuses = ['PRESENT', 'ABSENT', 'LATE'];
+      const cleanStatus = status === 'EXCUSED' ? 'ABSENT' : status;
+      if (!validStatuses.includes(cleanStatus)) {
+        return res.status(400).json({ success: false, message: 'Statut invalide (PRESENT, ABSENT, LATE)' });
       }
-      record.status = status;
+      record.status = cleanStatus;
+      if (cleanStatus === 'LATE') {
+        record.arrivalTime = arrivalTime !== undefined ? arrivalTime : record.arrivalTime;
+        const session = dbStore.sessions.find((s) => s.id === record.sessionId);
+        if (effectiveDurationMinutes !== undefined) {
+          record.effectiveDurationMinutes = effectiveDurationMinutes;
+        } else if (record.arrivalTime && session) {
+          record.effectiveDurationMinutes = computeEffectiveMinutes(session.startTime, session.endTime, record.arrivalTime);
+        }
+      } else {
+        record.arrivalTime = undefined;
+        record.effectiveDurationMinutes = undefined;
+      }
     }
 
     if (notes !== undefined) {

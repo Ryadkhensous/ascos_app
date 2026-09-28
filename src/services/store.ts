@@ -58,7 +58,9 @@ export interface AttendanceData {
   id: string;
   sessionId: string;
   athleteId: string;
-  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+  status: 'PRESENT' | 'ABSENT' | 'LATE';
+  arrivalTime?: string;
+  effectiveDurationMinutes?: number;
   notes?: string;
   updatedAt: string;
 }
@@ -202,7 +204,9 @@ export class AscosStore {
           if (Array.isArray(cloudData.groups) && cloudData.groups.length > 0) this.groups = cloudData.groups;
           if (Array.isArray(cloudData.athletes)) this.athletes = cloudData.athletes;
           if (Array.isArray(cloudData.sessions)) this.sessions = cloudData.sessions;
-          if (Array.isArray(cloudData.attendances)) this.attendances = cloudData.attendances;
+          if (Array.isArray(cloudData.attendances)) {
+            this.attendances = this.sanitizeAttendances(cloudData.attendances);
+          }
           if (Array.isArray(cloudData.swimmingTimes)) this.swimmingTimes = cloudData.swimmingTimes;
 
           console.log(`🌐 [PostgreSQL Cloud] Synchronisé avec succès (${this.athletes.length} athlètes, ${this.sessions.length} séances).`);
@@ -309,7 +313,9 @@ export class AscosStore {
         if (Array.isArray(parsed.groups) && parsed.groups.length > 0) this.groups = parsed.groups;
         if (Array.isArray(parsed.athletes)) this.athletes = parsed.athletes;
         if (Array.isArray(parsed.sessions)) this.sessions = parsed.sessions;
-        if (Array.isArray(parsed.attendances)) this.attendances = parsed.attendances;
+        if (Array.isArray(parsed.attendances)) {
+          this.attendances = this.sanitizeAttendances(parsed.attendances);
+        }
         if (Array.isArray(parsed.swimmingTimes)) this.swimmingTimes = parsed.swimmingTimes;
         console.log(`💾 Données ASCOS chargées depuis ${DATA_FILE} (${this.athletes.length} athlètes, ${this.groups.length} groupes, ${this.users.length} utilisateurs)`);
       } else {
@@ -318,6 +324,30 @@ export class AscosStore {
     } catch (err) {
       console.warn('⚠️ Impossible de lire ascos_store.json :', err);
     }
+  }
+
+  // Nettoyer les statuts obsolètes comme EXCUSED et s'assurer de la cohérence des présences
+  public sanitizeAttendances(list: any[]): AttendanceData[] {
+    return list.map((a) => {
+      let status: 'PRESENT' | 'ABSENT' | 'LATE' = a.status;
+      let notes = a.notes || '';
+      if (a.status === 'EXCUSED') {
+        status = 'ABSENT';
+        notes = notes ? `${notes} (Excusé)` : 'Excusé';
+      } else if (a.status !== 'PRESENT' && a.status !== 'ABSENT' && a.status !== 'LATE') {
+        status = 'PRESENT';
+      }
+      return {
+        id: a.id || `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        sessionId: a.sessionId,
+        athleteId: a.athleteId,
+        status,
+        arrivalTime: a.arrivalTime,
+        effectiveDurationMinutes: a.effectiveDurationMinutes,
+        notes,
+        updatedAt: a.updatedAt || new Date().toISOString(),
+      };
+    });
   }
 
   // Trouver ou recalculer si un temps est le meilleur temps personnel (PB)

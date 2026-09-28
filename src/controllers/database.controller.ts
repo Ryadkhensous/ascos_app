@@ -525,7 +525,6 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
                   const attB64 = Buffer.from(JSON.stringify(att)).toString('base64');
                   let statusBadge = '<span class="badge badge-green">✅ Présent</span>';
                   if (att.status === 'LATE') statusBadge = '<span class="badge badge-gold">⏰ Retard</span>';
-                  else if (att.status === 'EXCUSED') statusBadge = '<span class="badge badge-cyan">✉️ Excusé</span>';
                   else if (att.status === 'ABSENT') statusBadge = '<span class="badge" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.4);">❌ Absent</span>';
 
                   return `<tr>
@@ -1000,7 +999,6 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
               <select id="create-att-status" class="form-control" required>
                 <option value="PRESENT" selected>✅ Présent</option>
                 <option value="LATE">⏰ En Retard</option>
-                <option value="EXCUSED">✉️ Excusé</option>
                 <option value="ABSENT">❌ Absent</option>
               </select>
             </div>
@@ -1042,7 +1040,6 @@ export const renderDatabaseViewer = (_req: Request, res: Response) => {
               <select id="edit-att-status" class="form-control" required>
                 <option value="PRESENT">✅ Présent</option>
                 <option value="LATE">⏰ En Retard</option>
-                <option value="EXCUSED">✉️ Excusé</option>
                 <option value="ABSENT">❌ Absent</option>
               </select>
             </div>

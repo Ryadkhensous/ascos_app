@@ -139,13 +139,26 @@ export const getTrainingHoursStats = (req: Request, res: Response) => {
     }
 
     // Si on demande les statistiques d'un nageur spécifique (heures où il était présent)
+    const athleteAttendanceMap = new Map<string, any>();
     if (athleteId) {
       const athleteAttendances = dbStore.attendances.filter(
         (a) => a.athleteId === athleteId && (a.status === 'PRESENT' || a.status === 'LATE')
       );
-      const attendedSessionIds = new Set(athleteAttendances.map((a) => a.sessionId));
-      eligibleSessions = eligibleSessions.filter((s) => attendedSessionIds.has(s.id));
+      for (const a of athleteAttendances) {
+        athleteAttendanceMap.set(a.sessionId, a);
+      }
+      eligibleSessions = eligibleSessions.filter((s) => athleteAttendanceMap.has(s.id));
     }
+
+    const getSessionDurationForAthlete = (sess: any): number => {
+      if (athleteId && athleteAttendanceMap.has(sess.id)) {
+        const att = athleteAttendanceMap.get(sess.id);
+        if (att.status === 'LATE' && att.effectiveDurationMinutes !== undefined) {
+          return Math.round((att.effectiveDurationMinutes / 60) * 10) / 10;
+        }
+      }
+      return calculateSessionHours(sess.startTime, sess.endTime);
+    };
 
     // Totaux cumulés
     let hoursToday = 0;
@@ -157,7 +170,7 @@ export const getTrainingHoursStats = (req: Request, res: Response) => {
     let sessionsThisYearCount = 0;
 
     for (const sess of eligibleSessions) {
-      const dur = calculateSessionHours(sess.startTime, sess.endTime);
+      const dur = getSessionDurationForAthlete(sess);
       totalAllTime += dur;
 
       if (sess.date === todayStr) {
@@ -189,7 +202,7 @@ export const getTrainingHoursStats = (req: Request, res: Response) => {
       const dayName = dayNamesFr[d.getDay()];
 
       const daySessions = eligibleSessions.filter((s) => s.date === dateString);
-      const dayHours = daySessions.reduce((acc, s) => acc + calculateSessionHours(s.startTime, s.endTime), 0);
+      const dayHours = daySessions.reduce((acc, s) => acc + getSessionDurationForAthlete(s), 0);
 
       dailyBreakdown.push({
         date: dateString,
@@ -206,7 +219,7 @@ export const getTrainingHoursStats = (req: Request, res: Response) => {
     for (let m = 1; m <= 12; m++) {
       const mStr = `${currentYear}-${String(m).padStart(2, '0')}`;
       const monthSessions = eligibleSessions.filter((s) => s.date.startsWith(mStr));
-      const monthHours = monthSessions.reduce((acc, s) => acc + calculateSessionHours(s.startTime, s.endTime), 0);
+      const monthHours = monthSessions.reduce((acc, s) => acc + getSessionDurationForAthlete(s), 0);
 
       monthlyBreakdown.push({
         month: mStr,

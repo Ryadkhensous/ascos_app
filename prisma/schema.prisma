@@ -37,7 +37,6 @@ enum AttendanceStatus {
   PRESENT
   ABSENT
   LATE
-  EXCUSED
 }
 
 model User {
@@ -111,8 +110,10 @@ model Attendance {
   session   Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   athleteId String
   athlete   Athlete          @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  status    AttendanceStatus @default(PRESENT)
-  notes     String?
+  status                   AttendanceStatus @default(PRESENT)
+  arrivalTime              String?          // "18:25"
+  effectiveDurationMinutes Int?             // 65
+  notes                    String?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
