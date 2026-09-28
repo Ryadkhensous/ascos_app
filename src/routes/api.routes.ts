@@ -19,6 +19,7 @@ import {
   updateSession,
   deleteSession,
   generateDailySessions,
+  resetSessions,
 } from '../controllers/session.controller';
 import {
   markAttendance,
@@ -121,6 +122,8 @@ router.delete('/athletes/:id', deleteAthlete);
 // 📅 Séances d'entraînement (/api/sessions)
 // ==========================================
 router.get('/sessions', getSessions);
+router.post('/sessions/reset', resetSessions);
+router.delete('/sessions/all', resetSessions);
 router.post('/sessions/generate-daily', generateDailySessions);
 router.get('/sessions/:id', getSessionById);
 router.post('/sessions', createSession);

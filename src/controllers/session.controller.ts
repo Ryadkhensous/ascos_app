@@ -88,13 +88,6 @@ export function generateDefaultSessionsForDate(targetDate: string): SessionData[
 
 export const getSessions = (req: Request, res: Response) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-
-    // Si aucune séance n'existe pour aujourd'hui, générer automatiquement les séances du jour
-    if (dbStore.sessions.length === 0 || !dbStore.sessions.some((s) => s.date === today)) {
-      generateDefaultSessionsForDate(today);
-    }
-
     const { groupName, groups, coachGroups } = req.query;
     let list = [...dbStore.sessions];
 
@@ -335,6 +328,24 @@ export const generateDailySessions = (req: Request, res: Response) => {
       count: created.length,
       message: `${created.length} séances créées pour le ${targetDate}`,
       data: created,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Réinitialiser complètement toutes les séances et présences (liste vierge)
+export const resetSessions = (req: Request, res: Response) => {
+  try {
+    const sessionCount = dbStore.sessions.length;
+    const attendanceCount = dbStore.attendances.length;
+    dbStore.sessions = [];
+    dbStore.attendances = [];
+    dbStore.saveToFile();
+
+    return res.json({
+      success: true,
+      message: `${sessionCount} séances et ${attendanceCount} pointages réinitialisés avec succès. La liste est désormais vierge.`,
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
