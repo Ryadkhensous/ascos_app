@@ -5,6 +5,7 @@ import {
   createAthlete,
   createAthletesBatch,
   importExcelAthletes,
+  assignAthletesBatch,
   getExcelTemplate,
   updateAthlete,
   deleteAthlete,
@@ -106,6 +107,7 @@ router.delete('/groups/:id', deleteGroup);
 router.get('/athletes', getAthletes);
 router.get('/athletes/template-excel', getExcelTemplate);
 router.post('/athletes/import-excel', importExcelAthletes);
+router.post('/athletes/assign-batch', assignAthletesBatch);
 router.post('/athletes/batch', createAthletesBatch);
 router.delete('/athletes/all', clearAllAthletes);
 router.get('/athletes/:id', getAthleteById);

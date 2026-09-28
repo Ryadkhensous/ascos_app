@@ -203,6 +203,36 @@ export const createAthletesBatch = (req: Request, res: Response) => {
   }
 };
 
+// Assignation en lot d'athlètes à un entraîneur et/ou groupe
+export const assignAthletesBatch = (req: Request, res: Response) => {
+  try {
+    const { athleteIds, coachId, coachName, groupName } = req.body;
+    if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Liste d\'identifiants d\'athlètes requise' });
+    }
+
+    let updatedCount = 0;
+    for (const id of athleteIds) {
+      const athlete = dbStore.athletes.find((a) => a.id === id);
+      if (athlete) {
+        if (groupName !== undefined) athlete.groupName = groupName;
+        if (coachId !== undefined) athlete.coachId = coachId || undefined;
+        if (coachName !== undefined) athlete.coachName = coachName || undefined;
+        updatedCount++;
+      }
+    }
+
+    dbStore.saveToFile();
+    return res.json({
+      success: true,
+      count: updatedCount,
+      message: `${updatedCount} athlète(s) assigné(s) avec succès`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Importation directe depuis un fichier Excel (.xlsx, .xls) ou CSV en Base64
 export const importExcelAthletes = (req: Request, res: Response) => {
   try {
@@ -240,7 +270,7 @@ export const importExcelAthletes = (req: Request, res: Response) => {
       let lastName = '';
       let rawDob: any = null;
       let rawGender = '';
-      let groupName = defaultGroup || 'Groupe Performance';
+      let groupName = defaultGroup !== undefined ? defaultGroup : 'Non assigné';
       let category = '';
       let licenseNumber = '';
       let emergencyContact = '';
@@ -254,26 +284,56 @@ export const importExcelAthletes = (req: Request, res: Response) => {
           .replace(/[\u0300-\u036f]/g, ''); // enlever les accents
 
         const val = String(row[key]).trim();
+        if (!val) continue;
 
         if (cleanKey.includes('prenom') || cleanKey === 'firstname' || cleanKey === 'first name') {
           firstName = val;
-        } else if (cleanKey === 'nom' || cleanKey === 'lastname' || cleanKey === 'last name' || cleanKey === 'famille') {
+        } else if (cleanKey.includes('nom de famille') || cleanKey === 'lastname' || cleanKey === 'last name' || cleanKey === 'famille' || cleanKey === 'nom') {
           lastName = val;
-        } else if (cleanKey.includes('naissance') || cleanKey === 'dob' || cleanKey === 'date' || cleanKey === 'birth') {
+        } else if (cleanKey.includes('naissance') || cleanKey === 'dob' || cleanKey === 'date' || cleanKey === 'birth' || cleanKey === 'annee') {
           rawDob = row[key];
         } else if (cleanKey.includes('genre') || cleanKey.includes('sexe') || cleanKey === 'gender') {
           rawGender = val;
         } else if (cleanKey.includes('groupe') || cleanKey === 'group') {
-          if (val) groupName = val;
+          groupName = val;
         } else if (cleanKey.includes('categorie') || cleanKey === 'category') {
           category = val;
         } else if (cleanKey.includes('licence') || cleanKey.includes('license') || cleanKey === 'ffn') {
           licenseNumber = val;
-        } else if (cleanKey.includes('urgence') || cleanKey.includes('contact') || cleanKey.includes('telephone') || cleanKey.includes('tel') || cleanKey === 'phone') {
+        } else if (cleanKey.includes('urgence') || cleanKey.includes('contact') || cleanKey.includes('telephone') || cleanKey.includes('tel') || cleanKey === 'phone' || cleanKey.includes('parent')) {
           emergencyContact = val;
         } else if (cleanKey.includes('entraineur') || cleanKey.includes('coach')) {
           coachName = val;
         }
+      }
+
+      // Cas où le prénom et le nom sont dans une seule colonne "Nom complet" / "Athlète"
+      if (!firstName && !lastName) {
+        for (const key of Object.keys(row)) {
+          const cleanKey = key.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          if (cleanKey.includes('athlete') || cleanKey.includes('nageur') || cleanKey === 'nom et prenom' || cleanKey === 'nom prenom' || cleanKey === 'nom_prenom' || cleanKey === 'fullname' || cleanKey === 'full name') {
+            const parts = String(row[key]).trim().split(/\s+/);
+            if (parts.length >= 2) {
+              firstName = parts[0];
+              lastName = parts.slice(1).join(' ');
+            } else if (parts.length === 1) {
+              lastName = parts[0];
+              firstName = '-';
+            }
+            break;
+          }
+        }
+      }
+
+      // Cas où un seul des deux est renseigné avec un espace (ex: "Lucas Bernard")
+      if (firstName && !lastName && firstName.includes(' ')) {
+        const parts = firstName.split(/\s+/);
+        firstName = parts[0];
+        lastName = parts.slice(1).join(' ');
+      } else if (!firstName && lastName && lastName.includes(' ')) {
+        const parts = lastName.split(/\s+/);
+        firstName = parts[0];
+        lastName = parts.slice(1).join(' ');
       }
 
       if (!firstName || !lastName) {
@@ -289,12 +349,26 @@ export const importExcelAthletes = (req: Request, res: Response) => {
       }
 
       // Associer l'entraîneur correspondant au groupe si coachName n'est pas spécifié
-      if (!coachName) {
+      let coachId: string | undefined = undefined;
+      if (!coachName && groupName && groupName !== 'Non assigné' && groupName !== 'Sans groupe') {
         const matchingCoach = dbStore.users.find(
-          (u) => u.role === 'COACH' && u.assignedGroup && u.assignedGroup.toLowerCase() === groupName.toLowerCase()
+          (u) =>
+            u.role === 'COACH' &&
+            ((u.assignedGroups && u.assignedGroups.some((g) => g.toLowerCase() === groupName.toLowerCase())) ||
+              (u.assignedGroup && u.assignedGroup.toLowerCase() === groupName.toLowerCase()))
         );
         if (matchingCoach) {
           coachName = `${matchingCoach.firstName} ${matchingCoach.lastName}`;
+          coachId = matchingCoach.id;
+        }
+      } else if (coachName) {
+        const matchingCoach = dbStore.users.find(
+          (u) =>
+            u.role === 'COACH' &&
+            `${u.firstName} ${u.lastName}`.toLowerCase().includes(coachName.toLowerCase())
+        );
+        if (matchingCoach) {
+          coachId = matchingCoach.id;
         }
       }
 
@@ -305,7 +379,8 @@ export const importExcelAthletes = (req: Request, res: Response) => {
         dateOfBirth: dob,
         gender,
         category: category || determineCategory(dob),
-        groupName,
+        groupName: groupName || 'Non assigné',
+        coachId: coachId || undefined,
         coachName: coachName || undefined,
         licenseNumber: licenseNumber || `FFN-${Math.floor(100000 + Math.random() * 900000)}`,
         emergencyContact: emergencyContact || undefined,
