@@ -2,7 +2,7 @@ services:
   - type: web
     name: ascos-backend
     runtime: node
-    region: fra # Frankfurt, Europe (Très faible latence pour la France et l'Europe)
+    region: "frankfurt"
     plan: starter # ou free
     buildCommand: npm install && npm run build
     startCommand: npm start
