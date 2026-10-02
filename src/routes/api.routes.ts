@@ -88,11 +88,26 @@ router.get('/downloads/:filename?', downloadApk);
 // ==========================================
 router.get('/health', (_req, res) => {
   const localApk = findLocalApk('ascos.apk');
+  let cwdFiles: string[] = [];
+  let publicFiles: string[] = [];
+  try {
+    const fs = require('fs');
+    cwdFiles = fs.readdirSync(process.cwd());
+  } catch (_) {}
+  try {
+    const fs = require('fs');
+    publicFiles = fs.readdirSync(path.join(process.cwd(), 'public'));
+  } catch (_) {}
+
   res.json({
     success: true,
     status: 'ok',
     server: 'ASCOS Backend',
     timestamp: new Date().toISOString(),
+    cwd: process.cwd(),
+    dirname: __dirname,
+    cwdFiles,
+    publicFiles,
     hasLocalApk: !!localApk,
     localApkPath: localApk,
     githubReleaseUrl: GITHUB_RELEASE_APK_URL,
