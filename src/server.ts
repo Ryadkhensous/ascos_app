@@ -291,7 +291,50 @@ app.get(['/', '/telecharger', '/download', '/installer'], (req: Request, res: Re
   return res.redirect('/api/app/version');
 });
 
-// Téléchargement direct garanti de l'APK avec headers natifs de téléchargement
+// Constantes officielles de distribution CDN GitHub
+export const GITHUB_RELEASE_APK_URL = 'https://github.com/Ryadkhensous/ascos_app/releases/latest/download/ascos.apk';
+export const GITHUB_RAW_APK_URL = 'https://raw.githubusercontent.com/Ryadkhensous/ascos_app/main/public/downloads/ascos.apk';
+
+// Recherche intelligente du fichier APK local sur différents chemins (Render vs local)
+export function findLocalApk(targetFile: string = 'ascos.apk'): string | null {
+  const candidateDirs = [
+    path.resolve(process.cwd(), 'public/downloads'),
+    path.resolve(__dirname, '../public/downloads'),
+    path.resolve(__dirname, '../../public/downloads'),
+    path.resolve(__dirname, 'public/downloads'),
+    path.join(process.cwd(), 'public/downloads'),
+  ];
+  for (const dir of candidateDirs) {
+    const candidate = path.join(dir, targetFile);
+    if (fs.existsSync(candidate)) {
+      try {
+        const stats = fs.statSync(candidate);
+        if (stats.size > 100000) {
+          return candidate;
+        }
+      } catch (_) {}
+    }
+  }
+  return null;
+}
+
+// Recherche intelligente du dossier Flutter Web App
+export function findWebAppDir(): string {
+  const candidateDirs = [
+    path.resolve(process.cwd(), 'public/app'),
+    path.resolve(__dirname, '../public/app'),
+    path.resolve(__dirname, '../../public/app'),
+    path.resolve(__dirname, 'public/app'),
+  ];
+  for (const dir of candidateDirs) {
+    if (fs.existsSync(path.join(dir, 'index.html'))) {
+      return dir;
+    }
+  }
+  return path.resolve(process.cwd(), 'public/app');
+}
+
+// Téléchargement direct garanti de l'APK (disque local ou CDN GitHub Releases infaillible)
 app.get(['/downloads/ascos.apk', '/downloads/:filename', '/api/app/download', '/download-apk'], (req: Request, res: Response) => {
   const root = path.resolve(__dirname, '../');
   const metaFile = path.join(root, 'data/app_version.json');
@@ -306,31 +349,46 @@ app.get(['/downloads/ascos.apk', '/downloads/:filename', '/api/app/download', '/
   } catch (_) {}
 
   const targetFile = req.params.filename || filename;
-  const filePath = path.join(root, 'public/downloads', targetFile);
+  const localPath = findLocalApk(targetFile);
 
-  if (fs.existsSync(filePath)) {
+  if (localPath) {
     res.setHeader('Content-Type', 'application/vnd.android.package-archive');
     res.setHeader('Content-Disposition', `attachment; filename="ascos-v${version}.apk"`);
-    return res.download(filePath, `ascos-v${version}.apk`);
+    return res.download(localPath, `ascos-v${version}.apk`);
   }
 
-  return res.status(404).json({
-    success: false,
-    message: `Fichier APK introuvable : ${targetFile}`,
-  });
+  // Fallback 100% infaillible : redirection vers GitHub Releases CDN officiel
+  console.log(`[APK Download] Redirection vers GitHub Releases CDN pour ${targetFile}`);
+  return res.redirect(302, GITHUB_RELEASE_APK_URL);
 });
 
 // Montage de la Web App Flutter (pour iPhone/iOS et accès web direct)
-const webAppDir = path.resolve(__dirname, '../public/app');
+const webAppDir = findWebAppDir();
 if (!fs.existsSync(webAppDir)) {
   fs.mkdirSync(webAppDir, { recursive: true });
 }
-app.use('/app', express.static(webAppDir));
-app.use('/ios', express.static(webAppDir));
-app.use('/pwa', express.static(webAppDir));
+app.use('/app', express.static(webAppDir, { index: 'index.html' }));
+app.use('/ios', express.static(webAppDir, { index: 'index.html' }));
+app.use('/pwa', express.static(webAppDir, { index: 'index.html' }));
 
-// Montage des téléchargements statiques (APKs, etc.)
-const downloadsDir = path.resolve(__dirname, '../public/downloads');
+// Route fallback SPA pour l'app Web Flutter
+app.get(['/app', '/app/*', '/ios', '/ios/*', '/pwa', '/pwa/*'], (req: Request, res: Response, next: NextFunction) => {
+  const appDir = findWebAppDir();
+  const subPath = req.path.replace(/^\/(app|ios|pwa)\/?/, '');
+  const candidateFile = path.join(appDir, subPath);
+
+  if (subPath && fs.existsSync(candidateFile) && !fs.statSync(candidateFile).isDirectory()) {
+    return res.sendFile(candidateFile);
+  }
+  const indexPath = path.join(appDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  next();
+});
+
+// Montage des téléchargements statiques
+const downloadsDir = path.resolve(process.cwd(), 'public/downloads');
 if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }

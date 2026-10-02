@@ -57,7 +57,13 @@ import {
   deleteUser,
 } from '../controllers/auth.controller';
 import { getDashboardStats, getTrainingHoursStats } from '../controllers/stats.controller';
-import { getAppVersion, updateAppVersion, downloadApk } from '../controllers/update.controller';
+import {
+  getAppVersion,
+  updateAppVersion,
+  downloadApk,
+  findLocalApk,
+  GITHUB_RELEASE_APK_URL,
+} from '../controllers/update.controller';
 import {
   getDatabaseDump,
   downloadDatabaseBackup,
@@ -81,7 +87,16 @@ router.get('/downloads/:filename?', downloadApk);
 // 🩺 Health Check (/api/health)
 // ==========================================
 router.get('/health', (_req, res) => {
-  res.json({ success: true, status: 'ok', server: 'ASCOS Backend', timestamp: new Date().toISOString() });
+  const localApk = findLocalApk('ascos.apk');
+  res.json({
+    success: true,
+    status: 'ok',
+    server: 'ASCOS Backend',
+    timestamp: new Date().toISOString(),
+    hasLocalApk: !!localApk,
+    localApkPath: localApk,
+    githubReleaseUrl: GITHUB_RELEASE_APK_URL,
+  });
 });
 
 // ==========================================

@@ -51,6 +51,7 @@ export function renderLandingHtml(req: Request): string {
   const baseUrl = `${protocol}://${host}`;
   const downloadUrl = `/downloads/${meta.apkFileName || 'ascos.apk'}`;
   const fullDownloadUrl = `${baseUrl}/downloads/${meta.apkFileName || 'ascos.apk'}`;
+  const githubReleaseUrl = 'https://github.com/Ryadkhensous/ascos_app/releases/latest/download/ascos.apk';
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&format=svg&color=00e5ff&bgcolor=0a1128&data=${encodeURIComponent(fullDownloadUrl)}`;
 
   const notesList = meta.releaseNotes
@@ -1012,15 +1013,24 @@ export function renderLandingHtml(req: Request): string {
             <!-- Boutons CTA Android -->
             <div id="ctaAndroid">
               <div class="cta-group">
-                <button class="btn-download-glow" id="btnDownloadHero" onclick="triggerDownload(event)">
+                <a href="${downloadUrl}" class="btn-download-glow" id="btnDownloadHero" download="ascos-v${meta.version}.apk" onclick="triggerDownload(event)">
                   <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14zm-1-6h-2V8h-4v5H8l4 4 4-4z"/></svg>
                   <span>Télécharger l'APK (${apkSizeMb})</span>
-                </button>
+                </a>
 
                 <button class="btn-glass" onclick="copyDownloadLink()">
                   <svg style="width:19px;height:19px;fill:currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                   <span>Copier le lien</span>
                 </button>
+              </div>
+
+              <!-- Lien miroir de secours GitHub CDN direct -->
+              <div style="margin-top: -0.6rem; margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span style="color: var(--text-secondary); font-size: 0.82rem;">Lien alternatif direct :</span>
+                <a href="${githubReleaseUrl}" target="_blank" style="color: var(--electric-cyan); font-size: 0.84rem; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 0.35rem;">
+                  <span>⚡ Téléchargement Infaillible (GitHub CDN)</span>
+                  <svg style="width:13px;height:13px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                </a>
               </div>
 
               <div class="download-meta">
@@ -1324,9 +1334,8 @@ export function renderLandingHtml(req: Request): string {
       if (e && e.preventDefault) e.preventDefault();
 
       const isFile = window.location.protocol === 'file:';
-      // En local on utilise le chemin relatif au fichier sur le disque
-      const targetUrl = isFile ? './downloads/ascos.apk' : '/downloads/ascos.apk';
-      const fallbackUrl = 'https://ascos-app.onrender.com/downloads/ascos.apk';
+      const targetUrl = isFile ? '${githubReleaseUrl}' : '/downloads/ascos.apk';
+      const fallbackUrl = '${githubReleaseUrl}';
 
       // 1. Tenter le téléchargement par ancre invisible avec attribut download
       try {
