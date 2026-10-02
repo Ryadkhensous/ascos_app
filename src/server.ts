@@ -6,6 +6,7 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import apiRoutes from './routes/api.routes';
+import { renderLandingHtml } from './views/landing.view';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -282,8 +283,16 @@ const renderApiDocsHtml = () => `<!DOCTYPE html>
 </body>
 </html>`;
 
-// Route d'accueil & documentation
-app.get(['/', '/api/docs'], (req: Request, res: Response) => {
+// Route de la Landing Page Officielle pour les Entraîneurs
+app.get(['/', '/app', '/telecharger', '/download', '/installer'], (req: Request, res: Response) => {
+  if (req.accepts('html')) {
+    return res.send(renderLandingHtml(req));
+  }
+  return res.redirect('/api/app/version');
+});
+
+// Route de documentation technique et test API
+app.get('/api/docs', (req: Request, res: Response) => {
   if (req.accepts('html')) {
     return res.send(renderApiDocsHtml());
   }
