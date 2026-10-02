@@ -1,0 +1,9 @@
+{
+  "version": "1.0.1",
+  "buildNumber": 2,
+  "apkFileName": "ascos.apk",
+  "releaseNotes": "• Filtrage des athlètes et chronos par groupe\n• Vue globale et sélective par groupe pour l'administrateur\n• Calcul précis des dates de naissance et âges révolus\n• Système de mise à jour automatique intégrée",
+  "mandatory": false,
+  "releaseDate": "2026-10-02",
+  "minSupportedVersion": "1.0.0"
+}

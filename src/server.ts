@@ -3,6 +3,8 @@ dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
 import apiRoutes from './routes/api.routes';
 
 const app = express();
@@ -246,6 +248,33 @@ const renderApiDocsHtml = () => `<!DOCTYPE html>
       </div>
     </div>
 
+    <div class="section-title">📲 Mises à jour & Téléchargement Mobile (OTA)</div>
+    <div class="card">
+      <div class="endpoint">
+        <div class="endpoint-left">
+          <span class="method method-GET">GET</span>
+          <span class="path">/api/app/version</span>
+          <span class="desc">Vérification de la dernière version disponible & notes de version</span>
+        </div>
+        <a href="/api/app/version" target="_blank" class="test-btn">Tester &rarr;</a>
+      </div>
+      <div class="endpoint">
+        <div class="endpoint-left">
+          <span class="method method-GET">GET</span>
+          <span class="path">/downloads/ascos.apk</span>
+          <span class="desc">Lien direct de téléchargement de l'APK ASCOS Natation</span>
+        </div>
+        <a href="/downloads/ascos.apk" target="_blank" class="test-btn">Télécharger &rarr;</a>
+      </div>
+      <div class="endpoint">
+        <div class="endpoint-left">
+          <span class="method method-PUT">PUT</span>
+          <span class="path">/api/app/version</span>
+          <span class="desc">Publier une nouvelle version ou modifier les notes de version</span>
+        </div>
+      </div>
+    </div>
+
     <footer>
       &copy; 2026 ASCOS Natation &bull; Application Mobile Flutter & API REST Node.js TypeScript
     </footer>
@@ -285,9 +314,21 @@ app.get(['/', '/api/docs'], (req: Request, res: Response) => {
         recordNew: 'POST /api/times',
       },
       dashboard: 'GET /api/stats/dashboard',
+      appUpdates: {
+        version: 'GET /api/app/version',
+        updateVersion: 'PUT /api/app/version',
+        downloadApk: 'GET /downloads/ascos.apk ou GET /api/app/download',
+      },
     },
   });
 });
+
+// Montage des téléchargements statiques (APKs, etc.)
+const downloadsDir = path.resolve(__dirname, '../public/downloads');
+if (!fs.existsSync(downloadsDir)) {
+  fs.mkdirSync(downloadsDir, { recursive: true });
+}
+app.use('/downloads', express.static(downloadsDir));
 
 // Montage des routes API
 app.use('/api', apiRoutes);

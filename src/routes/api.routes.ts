@@ -57,6 +57,7 @@ import {
   deleteUser,
 } from '../controllers/auth.controller';
 import { getDashboardStats, getTrainingHoursStats } from '../controllers/stats.controller';
+import { getAppVersion, updateAppVersion, downloadApk } from '../controllers/update.controller';
 import {
   getDatabaseDump,
   downloadDatabaseBackup,
@@ -67,6 +68,14 @@ import {
 import { verifyToken } from '../middlewares/auth.middleware';
 
 const router = Router();
+
+// ==========================================
+// 📲 Mises à jour de l'application Mobile (/api/app)
+// ==========================================
+router.get('/app/version', getAppVersion);
+router.put('/app/version', updateAppVersion);
+router.get('/app/download', downloadApk);
+router.get('/downloads/:filename?', downloadApk);
 
 // ==========================================
 // 🩺 Health Check (/api/health)
