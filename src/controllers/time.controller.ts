@@ -78,7 +78,27 @@ export const getAthleteTimes = (req: Request, res: Response) => {
 // Obtenir le tableau des records du club (PBs par épreuve)
 export const getClubRecords = (req: Request, res: Response) => {
   try {
-    const pbs = dbStore.swimmingTimes.filter((t) => t.isPersonalBest);
+    const { coachGroup, coachGroups, groupName } = req.query;
+    let allowedGroups: string[] = [];
+    if (coachGroups) {
+      allowedGroups = (coachGroups as string)
+        .split(',')
+        .map((g) => g.trim())
+        .filter((g) => g.length > 0 && g !== 'Tous' && g !== 'Tous les groupes');
+    } else if (coachGroup && coachGroup !== 'Tous' && coachGroup !== 'Tous les groupes') {
+      allowedGroups = [coachGroup as string];
+    } else if (groupName && groupName !== 'Tous') {
+      allowedGroups = [groupName as string];
+    }
+
+    let pbs = dbStore.swimmingTimes.filter((t) => t.isPersonalBest);
+    if (allowedGroups.length > 0) {
+      const athleteIds = dbStore.athletes
+        .filter((a) => allowedGroups.includes(a.groupName))
+        .map((a) => a.id);
+      pbs = pbs.filter((t) => athleteIds.includes(t.athleteId));
+    }
+
     return res.json({ success: true, count: pbs.length, data: pbs });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -88,19 +108,45 @@ export const getClubRecords = (req: Request, res: Response) => {
 // Obtenir tous les temps enregistrés avec filtres
 export const getAllTimes = (req: Request, res: Response) => {
   try {
-    const { stroke, distance, poolType, athleteId, limit } = req.query;
+    const { stroke, distance, poolType, athleteId, coachGroups, coachGroup, groupName, group, limit } = req.query;
     let list = [...dbStore.swimmingTimes];
 
-    if (athleteId) {
+    let allowedGroups: string[] = [];
+    if (coachGroups) {
+      allowedGroups = (coachGroups as string)
+        .split(',')
+        .map((g) => g.trim())
+        .filter((g) => g.length > 0 && g !== 'Tous' && g !== 'Tous les groupes');
+    } else if (coachGroup && coachGroup !== 'Tous' && coachGroup !== 'Tous les groupes') {
+      allowedGroups = [coachGroup as string];
+    }
+
+    const explicitGroup = (groupName || group) as string | undefined;
+    if (explicitGroup && explicitGroup !== 'Tous' && explicitGroup !== 'Tous les groupes' && explicitGroup !== 'Tous mes groupes') {
+      if (allowedGroups.length > 0) {
+        allowedGroups = allowedGroups.filter((g) => g === explicitGroup);
+      } else {
+        allowedGroups = [explicitGroup];
+      }
+    }
+
+    if (allowedGroups.length > 0) {
+      const allowedAthleteIds = dbStore.athletes
+        .filter((a) => allowedGroups.includes(a.groupName))
+        .map((a) => a.id);
+      list = list.filter((t) => allowedAthleteIds.includes(t.athleteId));
+    }
+
+    if (athleteId && athleteId !== 'all' && athleteId !== 'Tous') {
       list = list.filter((t) => t.athleteId === athleteId);
     }
-    if (stroke) {
+    if (stroke && stroke !== 'Toutes' && stroke !== 'all') {
       list = list.filter((t) => t.stroke === stroke);
     }
-    if (distance) {
+    if (distance && distance !== 'all') {
       list = list.filter((t) => t.distance === Number(distance));
     }
-    if (poolType) {
+    if (poolType && poolType !== 'all') {
       list = list.filter((t) => t.poolType === poolType);
     }
 
@@ -110,7 +156,16 @@ export const getAllTimes = (req: Request, res: Response) => {
       list = list.slice(0, Number(limit));
     }
 
-    return res.json({ success: true, count: list.length, data: list });
+    // Enrichir chaque chrono avec le groupe de l'athlète
+    const enrichedList = list.map((t) => {
+      const ath = dbStore.athletes.find((a) => a.id === t.athleteId);
+      return {
+        ...t,
+        athleteGroup: ath?.groupName || '',
+      };
+    });
+
+    return res.json({ success: true, count: enrichedList.length, data: enrichedList });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

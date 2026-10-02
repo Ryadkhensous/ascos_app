@@ -19,26 +19,50 @@ export function calculateSessionHours(startTime: string, endTime: string): numbe
 
 export const getDashboardStats = (req: Request, res: Response) => {
   try {
-    const totalAthletes = dbStore.athletes.length;
+    const { coachGroup, coachGroups, groupName } = req.query;
+    let allowedGroups: string[] = [];
+    if (coachGroups) {
+      allowedGroups = (coachGroups as string)
+        .split(',')
+        .map((g) => g.trim())
+        .filter((g) => g.length > 0 && g !== 'Tous' && g !== 'Tous les groupes');
+    } else if (coachGroup && coachGroup !== 'Tous' && coachGroup !== 'Tous les groupes') {
+      allowedGroups = [coachGroup as string];
+    } else if (groupName && groupName !== 'Tous') {
+      allowedGroups = [groupName as string];
+    }
 
-    // Taux d'assiduité moyen global
-    const totalAttendance = dbStore.athletes.reduce((acc, curr) => acc + curr.attendanceRate, 0);
+    const isScoped = allowedGroups.length > 0;
+    const athletes = isScoped
+      ? dbStore.athletes.filter((a) => allowedGroups.includes(a.groupName))
+      : dbStore.athletes;
+
+    const totalAthletes = athletes.length;
+
+    // Taux d'assiduité moyen pour ce groupe ou global
+    const totalAttendance = athletes.reduce((acc, curr) => acc + curr.attendanceRate, 0);
     const averageAttendanceRate = totalAthletes > 0 ? Math.round((totalAttendance / totalAthletes) * 10) / 10 : 0.0;
 
     // Séance du jour ou prochaine séance
     const todayStr = new Date().toISOString().split('T')[0];
     const currentMonthStr = todayStr.slice(0, 7);
     const currentYearStr = todayStr.slice(0, 4);
-    const nextSession = dbStore.sessions.find((s) => s.date >= todayStr) || dbStore.sessions[0];
 
-    // Derniers records personnels battus
+    const sessions = isScoped
+      ? dbStore.sessions.filter((s) => allowedGroups.includes(s.groupName))
+      : dbStore.sessions;
+
+    const nextSession = sessions.find((s) => s.date >= todayStr) || sessions[0] || null;
+
+    // Derniers records personnels battus pour ce groupe
+    const athleteIds = athletes.map((a) => a.id);
     const recentRecords = dbStore.swimmingTimes
-      .filter((t) => t.isPersonalBest)
+      .filter((t) => t.isPersonalBest && (!isScoped || athleteIds.includes(t.athleteId)))
       .slice(0, 5);
 
     // Répartition par groupe
     const groupMap: { [key: string]: number } = {};
-    for (const ath of dbStore.athletes) {
+    for (const ath of athletes) {
       groupMap[ath.groupName] = (groupMap[ath.groupName] || 0) + 1;
     }
 
@@ -53,7 +77,7 @@ export const getDashboardStats = (req: Request, res: Response) => {
     let hoursThisYear = 0;
     let sessionsTodayCount = 0;
 
-    for (const sess of dbStore.sessions) {
+    for (const sess of sessions) {
       const dur = calculateSessionHours(sess.startTime, sess.endTime);
       if (sess.date === todayStr) {
         hoursToday += dur;
@@ -68,7 +92,7 @@ export const getDashboardStats = (req: Request, res: Response) => {
     }
 
     const totalCoaches = dbStore.users.filter((u) => u.role === 'COACH').length;
-    const totalGroups = dbStore.groups.length;
+    const totalGroups = isScoped ? allowedGroups.length : dbStore.groups.length;
 
     return res.json({
       success: true,
@@ -80,6 +104,7 @@ export const getDashboardStats = (req: Request, res: Response) => {
         nextSession,
         recentRecords,
         groupDistribution,
+        scopedGroups: isScoped ? allowedGroups : null,
         trainingHours: {
           today: Math.round(hoursToday * 10) / 10,
           thisMonth: Math.round(hoursThisMonth * 10) / 10,

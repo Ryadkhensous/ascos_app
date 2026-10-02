@@ -30,8 +30,8 @@ export function inferDobFromCategory(cat?: string, currentYear?: number): string
   if (c.includes('avenir') || c.includes('poussin')) {
     return `${y - 10}-01-01`; // ~10 ans
   }
-  if (c.includes('benjamin')) {
-    return `${y - 12}-01-01`; // ~12 ans
+  if (c.includes('jeune') || c.includes('benjamin')) {
+    return `${y - 13}-01-01`; // ~13 ans
   }
   if (c.includes('minime')) {
     return `${y - 14}-01-01`; // ~14 ans
@@ -40,10 +40,13 @@ export function inferDobFromCategory(cat?: string, currentYear?: number): string
     return `${y - 16}-01-01`; // ~16 ans
   }
   if (c.includes('junior')) {
-    return `${y - 18}-01-01`; // ~18 ans
+    return `${y - 17}-01-01`; // ~17 ans
   }
-  if (c.includes('senior') || c.includes('maitre') || c.includes('master') || c.includes('elite')) {
+  if (c.includes('senior') || c.includes('elite')) {
     return `${y - 21}-01-01`; // ~21 ans
+  }
+  if (c.includes('master') || c.includes('maitre')) {
+    return `${y - 30}-01-01`; // ~30 ans
   }
   if (c.includes('espoir')) {
     return `${y - 12}-01-01`; // ~12 ans
@@ -98,7 +101,25 @@ export function parseExcelDate(val: any, categoryHint?: string, ageHint?: any): 
   const str = String(val).trim().replace(/\s+/g, ' ');
   if (!str) return inferDobFromCategory(categoryHint, currentYear);
 
-  // Cas année pure 4 chiffres (ex: "2014")
+  // 1. Format ISO YYYY-MM-DD en priorité absolue (évite la fausse capture par DD-MM-YY)
+  const isoMatch = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+  if (isoMatch) {
+    const year = isoMatch[1];
+    const month = isoMatch[2].padStart(2, '0');
+    const day = isoMatch[3].padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // 2. Numéro de série Excel sous forme de chaîne numérique (ex: "41500")
+  const numVal = Number(str);
+  if (!isNaN(numVal) && numVal >= 10000 && numVal <= 65000) {
+    const date = new Date(Math.round((numVal - 25569) * 86400 * 1000));
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  }
+
+  // 3. Cas année pure 4 chiffres (ex: "2014")
   if (/^\d{4}$/.test(str)) {
     const y = parseInt(str, 10);
     if (y >= 1920 && y <= currentYear + 1) {
@@ -106,15 +127,15 @@ export function parseExcelDate(val: any, categoryHint?: string, ageHint?: any): 
     }
   }
 
-  // Cas année pure 2 chiffres (ex: "14", "08")
+  // 4. Cas année pure 2 chiffres (ex: "14", "08")
   if (/^\d{2}$/.test(str)) {
     const y = parseInt(str, 10);
     const fullY = y <= 35 ? 2000 + y : 1900 + y;
     return `${fullY}-01-01`;
   }
 
-  // Formats DD/MM/YYYY ou DD-MM-YYYY ou DD.MM.YYYY
-  const frMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+  // 5. Formats DD/MM/YYYY ou DD-MM-YYYY ou DD.MM.YYYY
+  const frMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
   if (frMatch) {
     const day = frMatch[1].padStart(2, '0');
     const month = frMatch[2].padStart(2, '0');
@@ -122,7 +143,7 @@ export function parseExcelDate(val: any, categoryHint?: string, ageHint?: any): 
     return `${year}-${month}-${day}`;
   }
 
-  // Formats DD/MM/YY ou DD-MM-YY (année sur 2 chiffres)
+  // 6. Formats DD/MM/YY ou DD-MM-YY (année sur 2 chiffres)
   const fr2Match = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2})$/);
   if (fr2Match) {
     const day = fr2Match[1].padStart(2, '0');
@@ -132,16 +153,7 @@ export function parseExcelDate(val: any, categoryHint?: string, ageHint?: any): 
     return `${year}-${month}-${day}`;
   }
 
-  // Format ISO YYYY-MM-DD
-  const isoMatch = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
-  if (isoMatch) {
-    const year = isoMatch[1];
-    const month = isoMatch[2].padStart(2, '0');
-    const day = isoMatch[3].padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  // Format avec nom de mois en français (ex: "15 mai 2012" ou "15-mai-2012")
+  // 7. Format avec nom de mois en français (ex: "15 mai 2012" ou "15-mai-2012")
   const textMonthMatch = str.match(/^(\d{1,2})[\s\-\.]([a-zA-Zéèû]+)[\s\-\.](\d{2,4})/);
   if (textMonthMatch) {
     const day = textMonthMatch[1].padStart(2, '0');
@@ -170,19 +182,25 @@ export function parseExcelDate(val: any, categoryHint?: string, ageHint?: any): 
   return inferDobFromCategory(categoryHint, currentYear);
 }
 
-// Déterminer la catégorie d'âge sportive selon l'année de naissance
+// Déterminer la catégorie d'âge sportive officielle selon la date de naissance
 export function determineCategory(dob: string): string {
   try {
-    const birthYear = parseInt(dob.split('-')[0], 10);
-    const currentYear = new Date().getFullYear();
-    const age = currentYear - birthYear;
-    if (age <= 9) return 'École de Natation (< 10 ans)';
-    if (age <= 11) return 'Avenirs (10-11 ans)';
-    if (age <= 13) return 'Benjamins (12-13 ans)';
-    if (age <= 15) return 'Minimes (14-15 ans)';
-    if (age <= 17) return 'Cadets (16-17 ans)';
-    if (age <= 19) return 'Juniors (18-19 ans)';
-    return 'Séniors & Maîtres (20+ ans)';
+    const parts = dob.split('-');
+    const birthYear = parseInt(parts[0], 10);
+    const birthMonth = parts[1] ? parseInt(parts[1], 10) : 1;
+    const birthDay = parts[2] ? parseInt(parts[2], 10) : 1;
+    const now = new Date();
+    let age = now.getFullYear() - birthYear;
+    if (now.getMonth() + 1 < birthMonth || (now.getMonth() + 1 === birthMonth && now.getDate() < birthDay)) {
+      age--;
+    }
+    if (age < 0) age = 0;
+
+    if (age <= 10) return 'Avenirs (- 11 ans)';
+    if (age <= 14) return 'Jeunes (11-14 ans)';
+    if (age <= 18) return 'Juniors (15-18 ans)';
+    if (age <= 24) return 'Séniors (19-24 ans)';
+    return 'Masters (25+ ans)';
   } catch (_) {
     return 'Juniors (15-18 ans)';
   }
