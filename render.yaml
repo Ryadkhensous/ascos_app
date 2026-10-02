@@ -11,6 +11,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET
-        generateValue: true
+        value: ascos_natation_secret_jwt_key_2026_super_secure
       - key: CORS_ORIGIN
         value: "*"
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_4CyzUlDJjEp8@ep-summer-silence-b1pqdu1w-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require
+      - key: JWT_EXPIRES_IN
+        value: 7d
