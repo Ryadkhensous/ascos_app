@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>ASCOS Natation - Télécharger l'Application Officielle Entraîneur</title>
-  <meta name="description" content="Téléchargez l'application mobile officielle ASCOS Natation. Chronométrage de précision au bord du bassin, feuilles de présence instantanées, détection automatique des records (PBs).">
+  <title>ASCOS Natation - Télécharger l'Application Officielle (Android & iOS)</title>
+  <meta name="description" content="Téléchargez l'application officielle ASCOS Natation pour Android (APK) et iPhone / iPad (iOS). Chronométrage de précision au bassin, feuilles d'appel et records club.">
   <meta name="theme-color" content="#0A1128">
 
   <!-- Open Graph / Réseaux & WhatsApp -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ascos-app.onrender.com">
-  <meta property="og:title" content="ASCOS Natation - Application Mobile Officielle">
-  <meta property="og:description" content="Téléchargez l'application d'entraînement ASCOS Natation pour Android : chronos en direct, feuilles d'appel et détection des records personnels. Version 1.0.1.">
+  <meta property="og:title" content="ASCOS Natation - Application Officielle Entraîneur (Android & iOS)">
+  <meta property="og:description" content="Téléchargez l'application mobile d'entraînement ASCOS Natation pour Android et iPhone : chronos en direct, feuilles d'appel et détection des PBs. Version 1.0.1.">
   <meta property="og:image" content="https://images.unsplash.com/photo-1530549387789-4c1017266635?w=1200&auto=format&fit=crop&q=80">
 
   <!-- Polices Google Fonts Premium -->
@@ -32,6 +32,7 @@
       --warning-orange: #FFAB00;
       --danger-red: #FF5252;
       --gold-record: #FFD700;
+      --apple-silver: #E2E8F0;
       --text-primary: #F1F5F9;
       --text-secondary: #94A3B8;
       --text-muted: #64748B;
@@ -68,7 +69,6 @@
       opacity: 0.65;
     }
 
-    /* Grille décorative subtile */
     .bg-grid-overlay {
       position: fixed;
       top: 0;
@@ -83,7 +83,6 @@
       pointer-events: none;
     }
 
-    /* Halo lumineux animé */
     .ambient-glow {
       position: fixed;
       width: 650px;
@@ -111,16 +110,15 @@
       z-index: 1;
     }
 
-    /* Header & Navigation avec effet verre flouté */
+    /* Header */
     header {
       position: sticky;
       top: 0;
       z-index: 100;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      background: rgba(10, 17, 40, 0.8);
+      background: rgba(10, 17, 40, 0.85);
       border-bottom: 1px solid var(--border-subtle);
-      transition: background 0.3s ease;
     }
     .nav-inner {
       display: flex;
@@ -147,30 +145,8 @@
       overflow: hidden;
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .brand-icon:hover {
-      transform: scale(1.08) rotate(5deg);
-    }
-    .brand-icon::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(60deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
-      transform: rotate(30deg);
-      animation: shineLoop 4s infinite linear;
-    }
-    @keyframes shineLoop {
-      0% { transform: translateX(-100%) rotate(30deg); }
-      100% { transform: translateX(100%) rotate(30deg); }
-    }
-    .brand-icon svg {
-      width: 25px;
-      height: 25px;
-      fill: var(--primary-navy);
-      z-index: 1;
-    }
+    .brand-icon:hover { transform: scale(1.08) rotate(5deg); }
+    .brand-icon svg { width: 25px; height: 25px; fill: var(--primary-navy); z-index: 1; }
     .brand-text h1 {
       font-family: 'Outfit', sans-serif;
       font-size: 1.5rem;
@@ -178,9 +154,6 @@
       letter-spacing: 1.6px;
       color: var(--electric-cyan);
       line-height: 1.1;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
     }
     .brand-text span {
       font-size: 0.72rem;
@@ -193,7 +166,7 @@
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1.2rem;
     }
     .nav-link {
       color: var(--text-secondary);
@@ -201,38 +174,46 @@
       font-size: 0.92rem;
       font-weight: 600;
       transition: all 0.2s ease;
-      position: relative;
       display: none;
     }
-    @media (min-width: 820px) { .nav-link { display: inline-block; } }
+    @media (min-width: 840px) { .nav-link { display: inline-block; } }
     .nav-link:hover { color: var(--electric-cyan); }
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: var(--electric-cyan);
-      transition: width 0.3s ease;
-    }
-    .nav-link:hover::after { width: 100%; }
 
-    /* Bouton CTA En-tête */
+    .btn-nav-ios {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 0.52rem 1.1rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+    .btn-nav-ios:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: #fff;
+      transform: translateY(-2px);
+    }
+
     .btn-nav-download {
       display: inline-flex;
       align-items: center;
       gap: 0.6rem;
-      background: rgba(0, 229, 255, 0.12);
+      background: rgba(0, 229, 255, 0.15);
       border: 1px solid var(--electric-cyan);
       color: var(--electric-cyan);
-      padding: 0.55rem 1.25rem;
+      padding: 0.52rem 1.25rem;
       border-radius: 9999px;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 0.88rem;
       text-decoration: none;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       box-shadow: 0 0 14px rgba(0, 229, 255, 0.15);
+      cursor: pointer;
     }
     .btn-nav-download:hover {
       background: var(--electric-cyan);
@@ -242,20 +223,15 @@
     }
 
     /* Section Hero */
-    .hero {
-      padding: 4.5rem 0 3.5rem;
-    }
+    .hero { padding: 4.5rem 0 3.5rem; }
     .hero-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 4rem;
       align-items: center;
     }
-    @media (min-width: 992px) {
-      .hero-grid { grid-template-columns: 1.15fr 0.85fr; }
-    }
+    @media (min-width: 992px) { .hero-grid { grid-template-columns: 1.15fr 0.85fr; } }
 
-    /* Badge Version Animé */
     .version-pill {
       display: inline-flex;
       align-items: center;
@@ -270,11 +246,6 @@
       margin-bottom: 1.6rem;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 20px rgba(0, 229, 255, 0.12);
-      animation: floatSubtle 4s ease-in-out infinite alternate;
-    }
-    @keyframes floatSubtle {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-4px); }
     }
     .pulse-dot {
       width: 9px;
@@ -310,17 +281,54 @@
       font-size: 1.15rem;
       color: var(--text-secondary);
       line-height: 1.7;
-      margin-bottom: 2.2rem;
+      margin-bottom: 2rem;
       max-width: 580px;
     }
 
-    /* Groupe de boutons d'action avec onde lumineuse */
+    /* Sélecteur de Plateforme Android / iOS */
+    .platform-selector {
+      display: inline-flex;
+      background: rgba(16, 31, 66, 0.9);
+      border: 1px solid var(--border-cyan);
+      border-radius: 16px;
+      padding: 5px;
+      gap: 6px;
+      margin-bottom: 1.8rem;
+    }
+    .platform-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .platform-btn.active {
+      background: var(--electric-cyan);
+      color: var(--primary-navy);
+      box-shadow: 0 0 18px var(--glow-cyan);
+    }
+    .platform-btn-ios.active {
+      background: #FFFFFF;
+      color: #0A1128;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+    .platform-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* Boutons CTA */
     .cta-group {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 1.2rem;
-      margin-bottom: 2.2rem;
+      margin-bottom: 2rem;
     }
 
     .btn-download-glow {
@@ -340,28 +348,39 @@
       box-shadow: 0 10px 35px var(--glow-cyan), 0 2px 6px rgba(0,0,0,0.5);
       transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       overflow: hidden;
-      z-index: 1;
-    }
-    .btn-download-glow::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.6) 10%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.3s;
-      transform: rotate(45deg);
-      pointer-events: none;
+      cursor: pointer;
+      border: none;
     }
     .btn-download-glow:hover {
       transform: translateY(-4px) scale(1.02);
       box-shadow: 0 16px 45px rgba(0, 229, 255, 0.65), 0 4px 14px rgba(0,0,0,0.4);
     }
-    .btn-download-glow:hover::before { opacity: 0.3; }
-    .btn-download-glow:active { transform: translateY(-1px) scale(0.99); }
     .btn-download-glow svg { width: 24px; height: 24px; fill: currentColor; }
+
+    .btn-apple-glow {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      background: linear-gradient(135deg, #FFFFFF, #E2E8F0);
+      color: #0A1128;
+      padding: 1.15rem 2.2rem;
+      border-radius: 18px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.12rem;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 10px 35px rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0,0,0,0.5);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      border: none;
+    }
+    .btn-apple-glow:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 16px 45px rgba(255, 255, 255, 0.5), 0 4px 14px rgba(0,0,0,0.4);
+    }
+    .btn-apple-glow svg { width: 24px; height: 24px; fill: currentColor; }
 
     .btn-glass {
       display: inline-flex;
@@ -385,11 +404,9 @@
       background: rgba(255, 255, 255, 0.12);
       border-color: var(--electric-cyan);
       color: var(--electric-cyan);
-      box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
       transform: translateY(-2px);
     }
 
-    /* Méta tags sous le bouton */
     .download-meta {
       display: flex;
       flex-wrap: wrap;
@@ -405,16 +422,13 @@
     }
     .download-meta-item svg { width: 17px; height: 17px; fill: var(--text-secondary); }
 
-    /* =======================================================
-       SMARTPHONE MOCKUP 3D AVEC CHRONOMÈTRE INTERACTIF LIVE
-       ======================================================= */
+    /* Phone Mockup */
     .phone-container {
       perspective: 1200px;
       display: flex;
       justify-content: center;
       position: relative;
     }
-
     .phone-mockup {
       width: 325px;
       background: #0D1836;
@@ -427,22 +441,15 @@
       position: relative;
       transform-style: preserve-3d;
       transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-      cursor: pointer;
     }
-
-    /* Reflet de brillance spéculaire 3D */
     .phone-glare {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       border-radius: 46px;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
       pointer-events: none;
       z-index: 20;
     }
-
     .phone-screen {
       background: #090E20;
       border-radius: 36px;
@@ -453,7 +460,6 @@
       overflow: hidden;
       position: relative;
     }
-
     .notch-bar {
       display: flex;
       justify-content: space-between;
@@ -471,16 +477,13 @@
       border-radius: 9999px;
     }
 
-    /* Boîte de Chronomètre Interactif Réel */
     .interactive-stopwatch {
       background: linear-gradient(135deg, rgba(0, 229, 255, 0.12), rgba(0, 102, 255, 0.16));
       border: 1px solid var(--border-cyan);
       border-radius: 20px;
       padding: 14px;
       text-align: center;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.1);
-      position: relative;
-      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     }
     .sw-label {
       font-size: 0.68rem;
@@ -520,20 +523,9 @@
     .sw-btn:hover {
       background: var(--electric-cyan);
       color: var(--primary-navy);
-      box-shadow: 0 0 12px var(--glow-cyan);
-    }
-    .sw-btn-reset {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
-      color: var(--text-secondary);
     }
 
-    /* Cartes de Nageurs Animées */
-    .mini-swimmer-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .mini-swimmer-list { display: flex; flex-direction: column; gap: 8px; }
     .mini-swimmer-card {
       background: var(--card-surface);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -542,13 +534,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      transition: all 0.25s ease;
       cursor: pointer;
-    }
-    .mini-swimmer-card:hover {
-      background: var(--card-surface-hover);
-      border-color: var(--electric-cyan);
-      transform: translateX(4px);
     }
     .mini-avatar {
       width: 32px;
@@ -571,20 +557,13 @@
       color: var(--electric-cyan);
     }
 
-    /* Boutons de présence interactifs */
-    .mini-att-box {
-      margin-top: 4px;
-    }
     .mini-att-title {
       font-size: 0.68rem;
       color: var(--text-secondary);
       font-weight: 700;
       margin-bottom: 6px;
     }
-    .mini-att-row {
-      display: flex;
-      gap: 6px;
-    }
+    .mini-att-row { display: flex; gap: 6px; }
     .att-chip {
       flex: 1;
       padding: 6px 0;
@@ -594,45 +573,17 @@
       font-weight: 800;
       cursor: pointer;
       transition: all 0.2s;
-      border: 1px solid transparent;
-      user-select: none;
     }
-    .att-chip-present {
-      background: rgba(0, 230, 118, 0.15);
-      color: var(--success-green);
-      border-color: rgba(0, 230, 118, 0.3);
-    }
-    .att-chip-present.active, .att-chip-present:hover {
-      background: var(--success-green);
-      color: #000;
-      box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
-    }
-    .att-chip-late {
-      background: rgba(255, 171, 0, 0.15);
-      color: var(--warning-orange);
-      border-color: rgba(255, 171, 0, 0.3);
-    }
-    .att-chip-late.active, .att-chip-late:hover {
-      background: var(--warning-orange);
-      color: #000;
-      box-shadow: 0 0 12px rgba(255, 171, 0, 0.4);
-    }
-    .att-chip-absent {
-      background: rgba(255, 82, 82, 0.15);
-      color: var(--danger-red);
-      border-color: rgba(255, 82, 82, 0.3);
-    }
-    .att-chip-absent.active, .att-chip-absent:hover {
-      background: var(--danger-red);
-      color: #fff;
-      box-shadow: 0 0 12px rgba(255, 82, 82, 0.4);
-    }
+    .att-chip-present { background: rgba(0, 230, 118, 0.15); color: var(--success-green); }
+    .att-chip-present.active { background: var(--success-green); color: #000; }
+    .att-chip-late { background: rgba(255, 171, 0, 0.15); color: var(--warning-orange); }
+    .att-chip-late.active { background: var(--warning-orange); color: #000; }
+    .att-chip-absent { background: rgba(255, 82, 82, 0.15); color: var(--danger-red); }
+    .att-chip-absent.active { background: var(--danger-red); color: #fff; }
 
-    /* Badges Flottants Animés Autour du Téléphone */
     .badge-record-burst {
       position: absolute;
-      top: -18px;
-      right: -24px;
+      top: -18px; right: -24px;
       background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 160, 0, 0.95));
       color: #0A1128;
       border-radius: 14px;
@@ -641,21 +592,11 @@
       font-size: 0.82rem;
       font-weight: 900;
       box-shadow: 0 12px 30px rgba(255, 215, 0, 0.45);
-      display: flex;
-      align-items: center;
-      gap: 6px;
       z-index: 25;
-      animation: floatBadge1 5s ease-in-out infinite alternate;
     }
-    @keyframes floatBadge1 {
-      0% { transform: translateY(0) rotate(2deg); }
-      100% { transform: translateY(-10px) rotate(-3deg); }
-    }
-
     .badge-qr-float {
       position: absolute;
-      bottom: -25px;
-      left: -28px;
+      bottom: -25px; left: -28px;
       background: rgba(16, 31, 66, 0.95);
       border: 1px solid var(--border-cyan);
       border-radius: 20px;
@@ -663,38 +604,59 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 25px var(--glow-cyan);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(14px);
       z-index: 25;
-      animation: floatBadge2 6s ease-in-out infinite alternate;
-    }
-    @keyframes floatBadge2 {
-      0% { transform: translateY(0) rotate(-1deg); }
-      100% { transform: translateY(-8px) rotate(2deg); }
     }
     .badge-qr-img {
-      width: 68px;
-      height: 68px;
+      width: 68px; height: 68px;
       border-radius: 10px;
       background: #0A1128;
       padding: 4px;
-      box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
     }
-    .badge-qr-info strong {
-      font-size: 0.88rem;
-      color: var(--electric-cyan);
-      display: block;
-      margin-bottom: 2px;
-    }
-    .badge-qr-info p {
-      font-size: 0.72rem;
-      color: var(--text-secondary);
-      line-height: 1.25;
-    }
+    .badge-qr-info strong { font-size: 0.88rem; color: var(--electric-cyan); display: block; margin-bottom: 2px; }
+    .badge-qr-info p { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.25; }
 
-    /* =======================================================
-       COMPTEURS DE STATISTIQUES ANIMÉS AU SCROLL
-       ======================================================= */
+    /* Guide iOS Spécial */
+    .ios-guide-box {
+      display: none;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(16, 31, 66, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      padding: 1.8rem;
+      margin-top: 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+    .ios-guide-box.show { display: block; }
+    .ios-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.2rem;
+      margin-top: 1rem;
+    }
+    .ios-step {
+      background: rgba(10, 17, 40, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1rem;
+    }
+    .ios-step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fff;
+      color: #0A1128;
+      font-weight: 900;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    .ios-step h5 { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem; }
+    .ios-step p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; }
+
+    /* Stats Bar */
     .stats-bar {
       margin: 4.5rem 0 3rem;
       background: linear-gradient(135deg, rgba(16, 31, 66, 0.75), rgba(10, 17, 40, 0.85));
@@ -710,14 +672,7 @@
       gap: 2rem;
       text-align: center;
     }
-    @media (min-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
     .stat-number {
       font-family: 'Outfit', sans-serif;
       font-size: 2.8rem;
@@ -727,19 +682,10 @@
       margin-bottom: 0.3rem;
       text-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
     }
-    .stat-label {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
+    .stat-label { font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; }
 
-    /* =======================================================
-       GRILLE DES FONCTIONNALITÉS AVEC EFFET HOVER GLOW
-       ======================================================= */
-    .section-title-wrap {
-      text-align: center;
-      margin-bottom: 3.5rem;
-    }
+    /* Features Grid */
+    .section-title-wrap { text-align: center; margin-bottom: 3.5rem; }
     .section-subtitle {
       color: var(--electric-cyan);
       font-weight: 800;
@@ -762,8 +708,6 @@
       gap: 1.8rem;
       margin-bottom: 6rem;
     }
-
-    /* Carte avec effet de reflet à la souris */
     .feature-card {
       background: var(--card-navy);
       border: 1px solid var(--border-subtle);
@@ -774,27 +718,13 @@
       overflow: hidden;
       cursor: pointer;
     }
-    .feature-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, var(--electric-cyan), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
     .feature-card:hover {
       transform: translateY(-8px);
       border-color: var(--border-cyan);
       box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 229, 255, 0.15);
     }
-    .feature-card:hover::before { opacity: 1; }
-
     .feature-icon-box {
-      width: 56px;
-      height: 56px;
+      width: 56px; height: 56px;
       border-radius: 16px;
       background: rgba(0, 229, 255, 0.1);
       border: 1px solid rgba(0, 229, 255, 0.3);
@@ -802,23 +732,8 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 1.5rem;
-      transition: all 0.3s ease;
     }
-    .feature-card:hover .feature-icon-box {
-      background: var(--electric-cyan);
-      transform: scale(1.1) rotate(-4deg);
-      box-shadow: 0 0 20px var(--glow-cyan);
-    }
-    .feature-icon-box svg {
-      width: 28px;
-      height: 28px;
-      fill: var(--electric-cyan);
-      transition: fill 0.3s;
-    }
-    .feature-card:hover .feature-icon-box svg {
-      fill: var(--primary-navy);
-    }
-
+    .feature-icon-box svg { width: 28px; height: 28px; fill: var(--electric-cyan); }
     .feature-card h3 {
       font-family: 'Outfit', sans-serif;
       font-size: 1.3rem;
@@ -826,15 +741,9 @@
       margin-bottom: 0.7rem;
       color: #fff;
     }
-    .feature-card p {
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-      line-height: 1.65;
-    }
+    .feature-card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.65; }
 
-    /* =======================================================
-       SECTION GUIDE D'INSTALLATION ÉTAPES
-       ======================================================= */
+    /* Steps Section */
     .steps-section {
       background: linear-gradient(180deg, var(--card-navy) 0%, rgba(16, 31, 66, 0.6) 100%);
       border: 1px solid var(--border-subtle);
@@ -850,20 +759,10 @@
       gap: 2.2rem;
       margin-top: 3rem;
     }
-    .step-item {
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-    .step-number-wrap {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.2rem;
-    }
+    .step-item { display: flex; flex-direction: column; }
+    .step-number-wrap { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
     .step-number {
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--electric-cyan), var(--ocean-blue));
       color: var(--primary-navy);
@@ -874,34 +773,17 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 20px var(--glow-cyan);
-      transition: transform 0.3s;
     }
-    .step-item:hover .step-number {
-      transform: scale(1.15) rotate(10deg);
-    }
-    .step-item h4 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 0.6rem;
-      color: #fff;
-    }
-    .step-item p {
-      color: var(--text-secondary);
-      font-size: 0.92rem;
-      line-height: 1.6;
-    }
+    .step-item h4 { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.6rem; color: #fff; }
+    .step-item p { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; }
 
-    /* =======================================================
-       CHANGELOG & NOTES DE VERSION
-       ======================================================= */
+    /* Changelog */
     .changelog-card {
       background: var(--card-navy);
       border: 1px solid var(--border-subtle);
       border-radius: 28px;
       padding: 2.5rem;
       margin-bottom: 6rem;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
     }
     .changelog-header {
       display: flex;
@@ -922,12 +804,7 @@
       font-size: 0.88rem;
       font-weight: 800;
     }
-    .changelog-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+    .changelog-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
     .changelog-list li {
       font-size: 0.98rem;
       color: var(--text-primary);
@@ -936,10 +813,7 @@
       gap: 0.85rem;
       line-height: 1.6;
     }
-    .bullet {
-      color: var(--electric-cyan);
-      font-size: 0.85rem;
-    }
+    .bullet { color: var(--electric-cyan); font-size: 0.85rem; }
 
     /* Footer */
     footer {
@@ -957,17 +831,8 @@
       align-items: center;
       gap: 1.8rem;
     }
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.8rem;
-    }
-    .footer-links a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      transition: color 0.2s ease;
-      font-weight: 600;
-    }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 1.8rem; }
+    .footer-links a { color: var(--text-secondary); text-decoration: none; font-weight: 600; }
     .footer-links a:hover { color: var(--electric-cyan); }
     .status-badge {
       display: inline-flex;
@@ -982,11 +847,10 @@
       font-weight: 700;
     }
 
-    /* Toast Notification Animé */
+    /* Toast */
     .toast {
       position: fixed;
-      bottom: 2rem;
-      right: 2rem;
+      bottom: 2rem; right: 2rem;
       background: var(--card-navy);
       color: #fff;
       border: 1px solid var(--electric-cyan);
@@ -999,37 +863,28 @@
       font-size: 0.95rem;
       font-weight: 700;
       opacity: 0;
-      transform: translateY(30px) scale(0.95);
+      transform: translateY(30px);
       pointer-events: none;
       transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1000;
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: auto;
-    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-    /* Classe utilitaire d'animation au défilement */
     .reveal {
       opacity: 0;
       transform: translateY(30px);
       transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .reveal.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .reveal.active { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
 
-  <!-- Canvas des Bulles et Ondes Aquatiques -->
   <canvas id="oceanCanvas"></canvas>
   <div class="bg-grid-overlay"></div>
   <div class="ambient-glow"></div>
 
-  <!-- Barre de navigation -->
+  <!-- Header -->
   <header>
     <div class="container">
       <div class="nav-inner">
@@ -1047,26 +902,29 @@
           <a href="#features" class="nav-link">Fonctionnalités</a>
           <a href="#install-guide" class="nav-link">Installation</a>
           <a href="#changelog" class="nav-link">Nouveautés</a>
-          <a href="https://ascos-app.onrender.com/downloads/ascos.apk" class="btn-nav-download" download="ascos-v1.0.1.apk">
+          <a href="/app" class="btn-nav-ios" target="_blank" title="Ouvrir la version iPhone / Web">
+            <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.8 1.11-1.92.99-3.04-.96.04-2.12.64-2.8 1.44-.59.69-1.12 1.83-.98 2.92 1.07.08 2.16-.57 2.79-1.32z"/></svg>
+            Version iOS
+          </a>
+          <button class="btn-nav-download" onclick="triggerDownload(event)">
             <svg style="width:17px;height:17px;fill:currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
             Télécharger APK
-          </a>
+          </button>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Hero Principal -->
+  <!-- Hero -->
   <main>
     <section class="hero">
       <div class="container">
         <div class="hero-grid">
           
-          <!-- Colonne Gauche -->
           <div class="reveal active">
             <div class="version-pill">
               <span class="pulse-dot"></span>
-              <span>Nouvelle version prête : v1.0.1 (Build #2)</span>
+              <span>Version officielle v1.0.1 (Build #2)</span>
             </div>
 
             <h2 class="hero-title">
@@ -1074,45 +932,93 @@
             </h2>
 
             <p class="hero-desc">
-              Chronométrez en temps réel au bord du bassin, validez les feuilles d'appel en 1 tap, suivez l'évolution chronométrique et célébrez automatiquement chaque nouveau record personnel (PB).
+              Chronométrez au bord du bassin, validez les feuilles d'appel en 1 geste et suivez les records personnels de chaque athlète. Disponible pour <strong>Android</strong> et <strong>iPhone (iOS)</strong>.
             </p>
 
-            <div class="cta-group">
-              <a href="https://ascos-app.onrender.com/downloads/ascos.apk" class="btn-download-glow" id="btnDownloadHero" download="ascos-v1.0.1.apk">
-                <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14zm-1-6h-2V8h-4v5H8l4 4 4-4z"/></svg>
-                <span>Télécharger l'APK (56.8 Mo)</span>
-              </a>
-
-              <button class="btn-glass" onclick="copyDownloadLink()">
-                <svg style="width:19px;height:19px;fill:currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-                <span>Copier le lien</span>
+            <!-- Sélecteur de système Android vs iPhone -->
+            <div class="platform-selector">
+              <button class="platform-btn active" id="tabAndroid" onclick="switchPlatform('android')">
+                <svg viewBox="0 0 24 24"><path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-1.35-.59-2.85-.92-4.47-.92s-3.12.33-4.47.92L5.65 5.67c-.19-.29-.55-.38-.84-.22-.31.16-.42.54-.26.85L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/></svg>
+                <span>Android (APK)</span>
+              </button>
+              <button class="platform-btn platform-btn-ios" id="tabIos" onclick="switchPlatform('ios')">
+                <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.8 1.11-1.92.99-3.04-.96.04-2.12.64-2.8 1.44-.59.69-1.12 1.83-.98 2.92 1.07.08 2.16-.57 2.79-1.32z"/></svg>
+                <span>iPhone / iPad (iOS)</span>
               </button>
             </div>
 
-            <div class="download-meta">
-              <div class="download-meta-item">
-                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                <span>Android 6.0+</span>
+            <!-- Boutons CTA Android -->
+            <div id="ctaAndroid">
+              <div class="cta-group">
+                <button class="btn-download-glow" id="btnDownloadHero" onclick="triggerDownload(event)">
+                  <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14zm-1-6h-2V8h-4v5H8l4 4 4-4z"/></svg>
+                  <span>Télécharger l'APK (56.8 Mo)</span>
+                </button>
+
+                <button class="btn-glass" onclick="copyDownloadLink()">
+                  <svg style="width:19px;height:19px;fill:currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                  <span>Copier le lien</span>
+                </button>
               </div>
-              <div class="download-meta-item">
-                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-                <span>Mise à jour automatique in-app</span>
-              </div>
-              <div class="download-meta-item">
-                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-                <span>Publié le 2026-10-02</span>
+
+              <div class="download-meta">
+                <div class="download-meta-item">
+                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                  <span>Android 6.0+ (Samsung, Xiaomi, Pixel...)</span>
+                </div>
+                <div class="download-meta-item">
+                  <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                  <span>Mises à jour in-app automatiques</span>
+                </div>
               </div>
             </div>
+
+            <!-- Boutons & Guide Rapide iOS -->
+            <div id="ctaIos" style="display: none;">
+              <div class="cta-group">
+                <a href="/app" class="btn-apple-glow" target="_blank">
+                  <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.8 1.11-1.92.99-3.04-.96.04-2.12.64-2.8 1.44-.59.69-1.12 1.83-.98 2.92 1.07.08 2.16-.57 2.79-1.32z"/></svg>
+                  <span>Ouvrir ASCOS pour iPhone</span>
+                </a>
+
+                <button class="btn-glass" onclick="copyIosLink()">
+                  <svg style="width:19px;height:19px;fill:currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                  <span>Copier le lien iOS</span>
+                </button>
+              </div>
+
+              <div class="ios-guide-box show">
+                <div style="font-weight: 800; font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem;">
+                  🍏 Installation en 3 clics sur iPhone (Safari) :
+                </div>
+                <div class="ios-steps">
+                  <div class="ios-step">
+                    <div class="ios-step-badge">1</div>
+                    <h5>Ouvrez sur Safari</h5>
+                    <p>Touchez le bouton blanc ci-dessus pour ouvrir l'application dans Safari.</p>
+                  </div>
+                  <div class="ios-step">
+                    <div class="ios-step-badge">2</div>
+                    <h5>Bouton Partager</h5>
+                    <p>Touchez l'icône Partager en bas (le carré avec une flèche vers le haut ⎋).</p>
+                  </div>
+                  <div class="ios-step">
+                    <div class="ios-step-badge">3</div>
+                    <h5>Sur l'écran d'accueil</h5>
+                    <p>Sélectionnez <strong>« Sur l'écran d'accueil »</strong>. L'icône ASCOS s'ajoute à votre iPhone !</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Colonne Droite : Smartphone Mockup 3D Parallaxe -->
+          <!-- Smartphone Mockup 3D Parallaxe -->
           <div class="phone-container">
-            <!-- Badge Flottant PB Record -->
             <div class="badge-record-burst">
               <span>★</span> RECORD CLUB BATTU ! -0.42s
             </div>
 
-            <!-- Téléphone interactif -->
             <div class="phone-mockup" id="phoneMockup">
               <div class="phone-glare"></div>
 
@@ -1123,17 +1029,15 @@
                   <span style="color:var(--electric-cyan);">ASCOS 5G</span>
                 </div>
 
-                <!-- Chronomètre interactif LIVE testable sur la page -->
                 <div class="interactive-stopwatch">
                   <div class="sw-label">Chronomètre Bassin 50m NL</div>
                   <div class="sw-digits" id="swDigits">00:25.84</div>
                   <div class="sw-controls">
                     <button class="sw-btn" id="btnSwToggle" onclick="toggleStopwatch()">Pause</button>
-                    <button class="sw-btn sw-btn-reset" onclick="resetStopwatch()">Reset</button>
+                    <button class="sw-btn" style="background:rgba(255,255,255,0.08);color:var(--text-secondary);" onclick="resetStopwatch()">Reset</button>
                   </div>
                 </div>
 
-                <!-- Simulation d'athlètes en direct -->
                 <div class="mini-swimmer-list">
                   <div class="mini-swimmer-card" onclick="simulateSwimmerClick(this, '24.95s')">
                     <div style="display:flex;align-items:center;gap:8px;">
@@ -1158,7 +1062,6 @@
                   </div>
                 </div>
 
-                <!-- Simulation des pointages d'appel -->
                 <div class="mini-att-box">
                   <div class="mini-att-title">Appel séance du jour (Touchez pour tester) :</div>
                   <div class="mini-att-row">
@@ -1170,7 +1073,6 @@
               </div>
             </div>
 
-            <!-- Badge QR Code pour smartphone -->
             <div class="badge-qr-float">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&format=svg&color=00e5ff&bgcolor=0a1128&data=https%3A%2F%2Fascos-app.onrender.com%2Fdownloads%2Fascos.apk" alt="QR Code Téléchargement ASCOS" class="badge-qr-img">
               <div class="badge-qr-info">
@@ -1184,7 +1086,7 @@
       </div>
     </section>
 
-    <!-- Barre des Statistiques Animées -->
+    <!-- Stats Bar -->
     <section class="container reveal">
       <div class="stats-bar">
         <div class="stats-grid">
@@ -1208,7 +1110,7 @@
       </div>
     </section>
 
-    <!-- Grille des Fonctionnalités -->
+    <!-- Features -->
     <section id="features" style="padding: 2rem 0 4rem;">
       <div class="container">
         <div class="section-title-wrap reveal">
@@ -1270,46 +1172,43 @@
       </div>
     </section>
 
-    <!-- Guide d'Installation 3 Étapes -->
+    <!-- Guide Installation -->
     <section id="install-guide" class="container reveal">
       <div class="steps-section">
         <div style="text-align:center;max-width:700px;margin:0 auto;">
-          <span class="section-subtitle">PRISE EN MAIN EN 2 MINUTES</span>
-          <h2 class="section-heading">Comment installer l'APK sur Android ?</h2>
-          <p style="color:var(--text-secondary);font-size:1.02rem;margin-top:0.6rem;">
-            L'application est distribuée directement par le club pour une sécurité et une rapidité optimales :
-          </p>
+          <span class="section-subtitle">INSTALLATION FACILE</span>
+          <h2 class="section-heading">Comment installer l'application sur votre téléphone ?</h2>
         </div>
 
         <div class="steps-grid">
           <div class="step-item">
             <div class="step-number-wrap">
-              <div class="step-number">1</div>
-              <h4>Téléchargez l'APK</h4>
+              <div class="step-number">🤖</div>
+              <h4>Sur Android</h4>
             </div>
-            <p>Appuyez sur le bouton <strong>Télécharger l'APK</strong> ou scannez le QR code. Le fichier <code>ascos.apk</code> s'enregistre dans vos téléchargements.</p>
+            <p>1. Cliquez sur <strong>Télécharger l'APK</strong>.<br>2. Autorisez la source dans les Paramètres Android si demandé.<br>3. Ouvrez le fichier et appuyez sur <strong>Installer</strong>.</p>
           </div>
 
           <div class="step-item">
             <div class="step-number-wrap">
-              <div class="step-number">2</div>
-              <h4>Autorisez la source</h4>
+              <div class="step-number" style="background:#fff;color:#0A1128;">🍎</div>
+              <h4>Sur iPhone (Safari)</h4>
             </div>
-            <p>Si Android signale <em>« Fichier potentiellement dangereux »</em>, appuyez sur <strong>Télécharger quand même</strong> puis <strong>Autoriser cette source</strong> dans les Paramètres.</p>
+            <p>1. Ouvrez <strong>ascos-app.onrender.com/app</strong> dans Safari.<br>2. Touchez l'icône Partager (carré avec flèche vers le haut).<br>3. Choisissez <strong>« Sur l'écran d'accueil »</strong>.</p>
           </div>
 
           <div class="step-item">
             <div class="step-number-wrap">
-              <div class="step-number">3</div>
-              <h4>Ouvrez & Connectez-vous</h4>
+              <div class="step-number" style="background:var(--success-green);color:#0A1128;">✓</div>
+              <h4>Connectez-vous</h4>
             </div>
-            <p>Touchez la notification de téléchargement, appuyez sur <strong>Installer</strong>, puis connectez-vous avec vos identifiants d'entraîneur !</p>
+            <p>Lancez ASCOS et saisissez votre adresse email et mot de passe coach. Vos athlètes et chronos se synchronisent automatiquement !</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Nouveautés de la Version -->
+    <!-- Changelog -->
     <section id="changelog" class="container reveal">
       <div class="changelog-card">
         <div class="changelog-header">
@@ -1327,7 +1226,7 @@
     </section>
   </main>
 
-  <!-- Pied de page -->
+  <!-- Footer -->
   <footer>
     <div class="container">
       <div class="footer-inner">
@@ -1340,7 +1239,8 @@
         </div>
 
         <div class="footer-links">
-          <a href="https://ascos-app.onrender.com/downloads/ascos.apk" download="ascos-v1.0.1.apk">Télécharger l'APK</a>
+          <a href="#" onclick="triggerDownload(event)">Télécharger l'APK</a>
+          <a href="/app" target="_blank">Version iPhone (Web)</a>
           <a href="/api/docs" target="_blank">Documentation API</a>
           <a href="/api/health" target="_blank">Health Check</a>
         </div>
@@ -1348,16 +1248,82 @@
     </div>
   </footer>
 
-  <!-- Notification Toast -->
+  <!-- Toast -->
   <div class="toast" id="toastNotification">
     <svg style="width:22px;height:22px;fill:var(--success-green);" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-    <span>Lien de téléchargement copié dans votre presse-papiers !</span>
+    <span id="toastMessage">Lien copié dans le presse-papiers !</span>
   </div>
 
-  <!-- Scripts d'animation, Canvas aquatique et interactions 3D -->
   <script>
     // ==========================================
-    // 1. ANIMATION CANVAS AQUATIQUE (Bulles et Ondes)
+    // TÉLÉCHARGEMENT DIRECT 100% GARANTI DE L'APK
+    // ==========================================
+    function triggerDownload(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      const isFile = window.location.protocol === 'file:';
+      // En local on utilise le chemin relatif au fichier sur le disque
+      const targetUrl = isFile ? './downloads/ascos.apk' : '/downloads/ascos.apk';
+      const fallbackUrl = 'https://ascos-app.onrender.com/downloads/ascos.apk';
+
+      // 1. Tenter le téléchargement par ancre invisible avec attribut download
+      try {
+        const link = document.createElement('a');
+        link.href = targetUrl;
+        link.setAttribute('download', 'ascos-v1.0.1.apk');
+        link.setAttribute('target', '_blank');
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          try { document.body.removeChild(link); } catch (_) {}
+        }, 200);
+      } catch (err) {
+        console.warn('Erreur ancre:', err);
+      }
+
+      // 2. Déclenchement par navigation pour forcer le téléchargement si l'ancre a été restreinte
+      if (!isFile) {
+        setTimeout(() => {
+          window.location.assign('/downloads/ascos.apk');
+        }, 350);
+      } else {
+        // En file:/// local, ouvrir dans un nouvel onglet pour lancer le téléchargement local
+        window.open('./downloads/ascos.apk', '_blank');
+      }
+
+      showToast('🚀 Téléchargement lancé ! Vérifiez vos notifications.');
+    }
+
+    // ==========================================
+    // SÉLECTEUR DE SYSTÈME (Android vs iPhone)
+    // ==========================================
+    function switchPlatform(p) {
+      const tabAndroid = document.getElementById('tabAndroid');
+      const tabIos = document.getElementById('tabIos');
+      const ctaAndroid = document.getElementById('ctaAndroid');
+      const ctaIos = document.getElementById('ctaIos');
+
+      if (p === 'ios') {
+        tabAndroid.classList.remove('active');
+        tabIos.classList.add('active');
+        ctaAndroid.style.display = 'none';
+        ctaIos.style.display = 'block';
+      } else {
+        tabIos.classList.remove('active');
+        tabAndroid.classList.add('active');
+        ctaIos.style.display = 'none';
+        ctaAndroid.style.display = 'block';
+      }
+    }
+
+    // Détection automatique de l'appareil (iPhone/iPad)
+    const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isAppleDevice) {
+      switchPlatform('ios');
+    }
+
+    // ==========================================
+    // ANIMATION CANVAS AQUATIQUE
     // ==========================================
     const canvas = document.getElementById('oceanCanvas');
     const ctx = canvas.getContext('2d');
@@ -1370,9 +1336,7 @@
     });
 
     const bubbles = [];
-    const bubbleCount = 45;
-
-    for (let i = 0; i < bubbleCount; i++) {
+    for (let i = 0; i < 45; i++) {
       bubbles.push({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -1385,17 +1349,14 @@
 
     function animateCanvas() {
       ctx.clearRect(0, 0, width, height);
-
       for (let i = 0; i < bubbles.length; i++) {
         const b = bubbles[i];
         b.y -= b.speed;
         b.x += b.drift;
-
         if (b.y < -10) {
           b.y = height + 10;
           b.x = Math.random() * width;
         }
-
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(0, 229, 255, ${b.opacity})`;
@@ -1404,37 +1365,34 @@
         ctx.fill();
         ctx.closePath();
       }
-
       requestAnimationFrame(animateCanvas);
     }
     animateCanvas();
 
     // ==========================================
-    // 2. PARALLAXE 3D DU SMARTPHONE AVEC REFLET
+    // PARALLAXE 3D DU TÉLÉPHONE
     // ==========================================
     const phone = document.getElementById('phoneMockup');
     const phoneContainer = document.querySelector('.phone-container');
-
     if (phoneContainer && window.innerWidth > 992) {
       phoneContainer.addEventListener('mousemove', (e) => {
         const rect = phoneContainer.getBoundingClientRect();
         const x = e.clientX - rect.left - rect.width / 2;
         const y = e.clientY - rect.top - rect.height / 2;
-        const rotateY = (x / rect.width) * 22;
-        const rotateX = -(y / rect.height) * 22;
+        const rotateY = (x / rect.width) * 20;
+        const rotateX = -(y / rect.height) * 20;
         phone.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
       });
-
       phoneContainer.addEventListener('mouseleave', () => {
         phone.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
       });
     }
 
     // ==========================================
-    // 3. CHRONOMÈTRE INTERACTIF LIVE
+    // CHRONOMÈTRE INTERACTIF
     // ==========================================
     let swRunning = true;
-    let swTimeMs = 25840; // 00:25.84
+    let swTimeMs = 25840;
     let swInterval = null;
 
     function formatTime(ms) {
@@ -1460,13 +1418,11 @@
         swRunning = false;
         btn.textContent = 'Reprendre';
         btn.style.background = 'rgba(0, 230, 118, 0.25)';
-        btn.style.borderColor = 'var(--success-green)';
       } else {
         startSw();
         swRunning = true;
         btn.textContent = 'Pause';
         btn.style.background = '';
-        btn.style.borderColor = '';
       }
     }
 
@@ -1493,7 +1449,7 @@
     }
 
     // ==========================================
-    // 4. ANIMATION DES COMPTEURS AU SCROLL
+    // COMPTEURS DE STATS
     // ==========================================
     let countersStarted = false;
     const observer = new IntersectionObserver((entries) => {
@@ -1529,25 +1485,39 @@
     }
 
     // ==========================================
-    // 5. COPIE DU LIEN AVEC TOAST
+    // COPIE DES LIENS
     // ==========================================
     function copyDownloadLink() {
-      const url = "https://ascos-app.onrender.com/downloads/ascos.apk";
+      const url = window.location.protocol === 'file:' 
+        ? 'https://ascos-app.onrender.com/downloads/ascos.apk' 
+        : window.location.origin + '/downloads/ascos.apk';
+      copyToClipboard(url, 'Lien de téléchargement Android copié !');
+    }
+
+    function copyIosLink() {
+      const url = window.location.protocol === 'file:' 
+        ? 'https://ascos-app.onrender.com/app' 
+        : window.location.origin + '/app';
+      copyToClipboard(url, 'Lien de l\'application iPhone copié !');
+    }
+
+    function copyToClipboard(text, msg) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(showToast);
+        navigator.clipboard.writeText(text).then(() => showToast(msg));
       } else {
         const input = document.createElement('textarea');
-        input.value = url;
+        input.value = text;
         document.body.appendChild(input);
         input.select();
         document.execCommand('copy');
         document.body.removeChild(input);
-        showToast();
+        showToast(msg);
       }
     }
 
-    function showToast() {
+    function showToast(msg) {
       const toast = document.getElementById('toastNotification');
+      if (msg) document.getElementById('toastMessage').textContent = msg;
       toast.classList.add('show');
       setTimeout(() => { toast.classList.remove('show'); }, 3500);
     }

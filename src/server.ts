@@ -284,12 +284,57 @@ const renderApiDocsHtml = () => `<!DOCTYPE html>
 </html>`;
 
 // Route de la Landing Page Officielle pour les Entraîneurs
-app.get(['/', '/app', '/telecharger', '/download', '/installer'], (req: Request, res: Response) => {
+app.get(['/', '/telecharger', '/download', '/installer'], (req: Request, res: Response) => {
   if (req.accepts('html')) {
     return res.send(renderLandingHtml(req));
   }
   return res.redirect('/api/app/version');
 });
+
+// Téléchargement direct garanti de l'APK avec headers natifs de téléchargement
+app.get(['/downloads/ascos.apk', '/downloads/:filename', '/api/app/download', '/download-apk'], (req: Request, res: Response) => {
+  const root = path.resolve(__dirname, '../');
+  const metaFile = path.join(root, 'data/app_version.json');
+  let filename = 'ascos.apk';
+  let version = '1.0.1';
+  try {
+    if (fs.existsSync(metaFile)) {
+      const parsed = JSON.parse(fs.readFileSync(metaFile, 'utf-8'));
+      if (parsed.apkFileName) filename = parsed.apkFileName;
+      if (parsed.version) version = parsed.version;
+    }
+  } catch (_) {}
+
+  const targetFile = req.params.filename || filename;
+  const filePath = path.join(root, 'public/downloads', targetFile);
+
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', `attachment; filename="ascos-v${version}.apk"`);
+    return res.download(filePath, `ascos-v${version}.apk`);
+  }
+
+  return res.status(404).json({
+    success: false,
+    message: `Fichier APK introuvable : ${targetFile}`,
+  });
+});
+
+// Montage de la Web App Flutter (pour iPhone/iOS et accès web direct)
+const webAppDir = path.resolve(__dirname, '../public/app');
+if (!fs.existsSync(webAppDir)) {
+  fs.mkdirSync(webAppDir, { recursive: true });
+}
+app.use('/app', express.static(webAppDir));
+app.use('/ios', express.static(webAppDir));
+app.use('/pwa', express.static(webAppDir));
+
+// Montage des téléchargements statiques (APKs, etc.)
+const downloadsDir = path.resolve(__dirname, '../public/downloads');
+if (!fs.existsSync(downloadsDir)) {
+  fs.mkdirSync(downloadsDir, { recursive: true });
+}
+app.use('/downloads', express.static(downloadsDir));
 
 // Route de documentation technique et test API
 app.get('/api/docs', (req: Request, res: Response) => {
@@ -331,13 +376,6 @@ app.get('/api/docs', (req: Request, res: Response) => {
     },
   });
 });
-
-// Montage des téléchargements statiques (APKs, etc.)
-const downloadsDir = path.resolve(__dirname, '../public/downloads');
-if (!fs.existsSync(downloadsDir)) {
-  fs.mkdirSync(downloadsDir, { recursive: true });
-}
-app.use('/downloads', express.static(downloadsDir));
 
 // Montage des routes API
 app.use('/api', apiRoutes);
