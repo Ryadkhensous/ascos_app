@@ -33,8 +33,10 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 ascos
 
-# Copie uniquement des fichiers nécessaires
+# Copie des fichiers et assets publics (Web App Flutter, APKs, data)
 COPY package*.json ./
+COPY data/ ./data/
+COPY public/ ./public/
 
 # Installation stricte des dépendances de production
 RUN npm ci --only=production && npm cache clean --force
